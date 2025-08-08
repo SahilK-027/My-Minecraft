@@ -1,9 +1,14 @@
 import * as THREE from 'three';
 import Game from '../../../../Game.class';
 
-const WORLD_SIZE = 32;
-const WORLD_HALF = WORLD_SIZE / 2;
+const WORLD_CONFIG = {
+  width: 64,
+  height: 32,
+  depth: 64,
+};
 
+const MAX_BLOCK_COUNT =
+  WORLD_CONFIG.width * WORLD_CONFIG.height * WORLD_CONFIG.depth;
 export default class BlockWorld {
   constructor() {
     this.game = Game.getInstance();
@@ -22,15 +27,30 @@ export default class BlockWorld {
   generateBlockWorldInstance() {
     this.worldGroup = new THREE.Group();
 
-    for (let x = 0; x < WORLD_SIZE; x++) {
-      for (let z = 0; z < WORLD_SIZE; z++) {
-        const block = new THREE.Mesh(this.blockGeometry, this.blockMaterial);
-        // shift by WORLD_HALF, plus 0.5 so blocks sit atop the XZ-plane
-        block.position.set(x - WORLD_HALF + 0.5, 0.5, z - WORLD_HALF + 0.5);
-        this.worldGroup.add(block);
+    const blockMesh = new THREE.InstancedMesh(
+      this.blockGeometry,
+      this.blockMaterial,
+      MAX_BLOCK_COUNT
+    );
+
+    let count = 0;
+    const matrix = new THREE.Matrix4();
+
+    const halfW = WORLD_CONFIG.width / 2;
+    const halfD = WORLD_CONFIG.depth / 2;
+
+    for (let x = 0; x < WORLD_CONFIG.width; x++) {
+      for (let y = 0; y < WORLD_CONFIG.height; y++) {
+        for (let z = 0; z < WORLD_CONFIG.depth; z++) {
+          matrix.setPosition(x - halfW + 0.5, y, z - halfD + 0.5);
+          blockMesh.setMatrixAt(count++, matrix);
+        }
       }
     }
+    blockMesh.count = count;
+    blockMesh.instanceMatrix.needsUpdate = true;
 
+    this.worldGroup.add(blockMesh);
     this.scene.add(this.worldGroup);
   }
 }
