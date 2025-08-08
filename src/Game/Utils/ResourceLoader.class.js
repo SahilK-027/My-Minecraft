@@ -11,46 +11,37 @@ export default class ResourceLoader extends EventEmitter {
     this.sources = assets;
     this.items = {};
     this.sourceByUrl = {};
+
+    // Build a map of every URL → its src record
     this.sources.forEach((src) => {
-      // if path is an array, register each URL…
-      if (Array.isArray(src.path)) {
-        src.path.forEach((url) => {
-          this.sourceByUrl[url] = src;
-        });
-      }
-      // …otherwise just the one
-      else {
-        this.sourceByUrl[src.path] = src;
-      }
+      const paths = Array.isArray(src.path) ? src.path : [src.path];
+      paths.forEach((url) => {
+        this.sourceByUrl[url] = src;
+      });
     });
 
-    // total to load
-    this.toLoad = this.sources.length;
+    // Total URLs we expect Three.js to load
+    this.toLoad = Object.keys(this.sourceByUrl).length;
     this.loaded = 0;
 
-    // create a central manager
+    // Create and wire the manager
     this.manager = new THREE.LoadingManager();
 
-    // hook up manager callbacks
     this.manager.onProgress = (_url, itemsLoaded, itemsTotal) => {
       this.loaded = itemsLoaded;
-      const percent = (itemsLoaded / itemsTotal) * 100;
-
       const src = this.sourceByUrl[_url];
       const id = src ? src.id : _url;
-      const file = _url.toString().substring(_url.lastIndexOf('/') + 1);
-      const uniqueFile = `${id} - ${file}`;
+      const file = _url.substring(_url.lastIndexOf('/') + 1);
 
       this.trigger('progress', {
-        id: uniqueFile,
+        id: `${id} - ${file}`,
         itemsLoaded,
         itemsTotal,
-        percent,
+        percent: (itemsLoaded / itemsTotal) * 100,
       });
     };
 
     this.manager.onLoad = () => {
-      // all done
       this.trigger('loaded', {
         itemsLoaded: this.toLoad,
         itemsTotal: this.toLoad,
@@ -72,6 +63,12 @@ export default class ResourceLoader extends EventEmitter {
 
     this.setLoaders();
     this.initLoading();
+
+    // If there was nothing to load, fire the loaded event right away
+    if (this.toLoad === 0) {
+      // Give the manager a tick to settle, then call onLoad
+      setTimeout(() => this.manager.onLoad(), 0);
+    }
   }
 
   setLoaders() {

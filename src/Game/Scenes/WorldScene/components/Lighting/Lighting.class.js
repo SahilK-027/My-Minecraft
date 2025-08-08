@@ -9,7 +9,6 @@ export default class Lighting {
     this.helperEnabled = helperEnabled;
 
     this.setThreeDirectionalLights();
-    this.setEnvironmentMapInstance();
   }
 
   setThreeDirectionalLights() {
@@ -38,29 +37,5 @@ export default class Lighting {
       this.scene.add(new THREE.DirectionalLightHelper(this.fillLight, 0.5));
       this.scene.add(new THREE.DirectionalLightHelper(this.backLight, 0.5));
     }
-  }
-
-  setEnvironmentMapInstance() {
-    this.environmentMap = {
-      intensity: 2.0,
-      texture: this.resources.items.environmentMapTexture,
-      updateMaterials: () => {
-        this.scene.traverse((child) => {
-          if (
-            child instanceof THREE.Mesh &&
-            child.material instanceof THREE.MeshStandardMaterial
-          ) {
-            child.material.envMap = this.environmentMap.texture;
-            child.material.envMapIntensity = this.environmentMap.intensity;
-            child.material.needsUpdate = true;
-          }
-        });
-      },
-    };
-
-    // Ensure correct color space
-    this.environmentMap.texture.colorSpace = THREE.SRGBColorSpace;
-    this.environmentMap.updateMaterials();
-    this.scene.environment = this.environmentMap.texture;
   }
 }

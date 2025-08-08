@@ -22,7 +22,12 @@ resources.on('error', ({ id, url, itemsLoaded, itemsTotal }) => {
 });
 
 resources.on('loaded', () => {
-  console.log('✅ All assets are loaded, initializing game…!');
+  if (resources.length) {
+    console.log('✅ All assets are loaded. Initializing game…!');
+  } else {
+    console.log('☑️ No asset to load. Initializing game…!');
+  }
+
   new Game(document.getElementById('three'), resources);
   progressBar.style.display = 'none';
   progress.style.display = 'none';

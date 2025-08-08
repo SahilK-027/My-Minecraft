@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import Game from '../Game.class';
-import PerformanceMonitor from '../Utils/PerformanceMonitor';
+import PerformanceMonitor from '../Utils/PerformanceMonitor.class';
 
 export default class Renderer {
   constructor() {
@@ -11,6 +11,7 @@ export default class Renderer {
     this.camera = this.game.camera;
     this.renderer = this.game.renderer;
     this.debug = this.game.debug;
+    this.themeConfig = this.game.themeConfig;
 
     this.setRendererInstance();
   }
@@ -50,6 +51,7 @@ export default class Renderer {
     this.rendererInstance.shadowMap.type = THREE.PCFSoftShadowMap;
     this.rendererInstance.setSize(this.sizes.width, this.sizes.height);
     this.rendererInstance.setPixelRatio(this.sizes.pixelRatio);
+    this.rendererInstance.setClearColor(this.themeConfig.sky_color);
 
     this.setUpPerformanceMonitor();
   }

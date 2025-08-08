@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import Game from '../../Game.class';
 import DebugFloor from './components/DebugFloor/DebugFloor.class';
 import Lighting from './components/Lighting/Lighting.class';
-import Cube from './components/Cube/Cube.class';
+import CubeWorld from './components/CubeWorld/CubeWorld.class';
 
 export default class World {
   constructor() {
@@ -12,8 +12,7 @@ export default class World {
     /**
      * Scene objects
      */
-    this.scene.fog = new THREE.FogExp2(0x121316, 0.075);
-    this.cube = new Cube();
+    this.cubeWorld = new CubeWorld();
     this.debugFloor = new DebugFloor();
 
     this.lighting = new Lighting({ helperEnabled: false });

@@ -5,6 +5,7 @@ import Camera from './Core/Camera.class';
 import Renderer from './Core/Renderer.class';
 import World from './Scenes/WorldScene/World.scene';
 import DebugGUI from './Utils/DebugGUI';
+import { getThemeConfig } from './Utils/ThemeManager.class';
 
 export default class Game {
   constructor(canvas, resources) {
@@ -22,6 +23,7 @@ export default class Game {
     this.debug = new DebugGUI();
     this.scene = new THREE.Scene();
     this.camera = new Camera();
+    this.themeConfig = getThemeConfig('windsweptHills');
     this.renderer = new Renderer();
     this.world = new World();
 
