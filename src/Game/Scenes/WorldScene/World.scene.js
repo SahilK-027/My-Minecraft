@@ -1,8 +1,7 @@
-import * as THREE from 'three';
 import Game from '../../Game.class';
 import DebugFloor from './components/DebugFloor/DebugFloor.class';
 import Lighting from './components/Lighting/Lighting.class';
-import CubeWorld from './components/CubeWorld/CubeWorld.class';
+import BlockWorld from './components/BlockWorld/BlockWorld.class';
 
 export default class World {
   constructor() {
@@ -12,7 +11,7 @@ export default class World {
     /**
      * Scene objects
      */
-    this.cubeWorld = new CubeWorld();
+    this.blockWorld = new BlockWorld();
     this.debugFloor = new DebugFloor();
 
     this.lighting = new Lighting({ helperEnabled: false });
