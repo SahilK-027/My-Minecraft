@@ -1,5 +1,16 @@
-# Simple Minecraft
+# 🪵 Simple Minecraft
+In-browser Minecraft-style sandbox game. Dig, build, and explore right from your browser!
 
-Built on top of [Three.js Game Development Template](https://github.com/SahilK-027/threejs-gamedev-template)
+> [!WARNING]  
+> This project is still "Work in progress" 🚧, so expect bugs and less-than-perfect performance for now. 😅
 
-👉🏻 Live: https://simple-minecraft.vercel.app
+
+Built on top of [Three.js Game Development Template]()
+
+## 🚀 Live
+
+👉🏻 https://simple-minecraft.vercel.app
+
+## 🛠 Built With
+- [Three.js](https://github.com/mrdoob/three.js)
+- [Three.js Game Development Template](https://github.com/SahilK-027/threejs-gamedev-template)
