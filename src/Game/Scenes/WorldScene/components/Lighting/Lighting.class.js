@@ -16,7 +16,7 @@ export default class Lighting {
 
   setThreeDirectionalLights() {
     // Sunlight
-    this.sunLight = new THREE.DirectionalLight(0xfffce5, 5, 0, 2);
+    this.sunLight = new THREE.DirectionalLight(0xfffce5, 4, 0, 2);
     this.sunLight.position.set(-45, 25, 45);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.set(512, 512);
@@ -26,16 +26,16 @@ export default class Lighting {
     this.sunLight.shadow.camera.top = 35;
     this.sunLight.shadow.camera.near = 0.1;
     this.sunLight.shadow.camera.far = 135;
-
+    this.sunLight.shadow.bias = -0.005;
     this.scene.add(this.sunLight);
 
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(this.ambientLight);
 
-    const shadowHelper = new THREE.CameraHelper(this.sunLight.shadow.camera);
-    this.scene.add(shadowHelper);
 
     if (this.helperEnabled) {
+      this.shadowHelper = new THREE.CameraHelper(this.sunLight.shadow.camera);
+      this.scene.add(this.shadowHelper);
       this.scene.add(new THREE.DirectionalLightHelper(this.sunLight, 0.5));
     }
   }
@@ -48,7 +48,7 @@ export default class Lighting {
         color: true,
         label: 'Sunlight color'
       },
-      'Light folder'
+      'Light Folder'
     );
     this.debug.add(
       this.sunLight,
@@ -57,9 +57,9 @@ export default class Lighting {
         min: 0,
         max: 10,
         step: 0.01,
-        label: 'Sunlight intensity'
+        label: 'Sunlight Intensity'
       },
-      'Light folder'
+      'Light Folder'
     );
   }
 }

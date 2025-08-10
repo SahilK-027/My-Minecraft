@@ -13,12 +13,26 @@ const WORLD_CONFIG = {
 };
 
 const WORLD_PARAMS = {
-  seed: 27,
+  seed: 3608,
   terrain: {
     scale: 30,
-    magnitude: 0.5,
-    offset: 0.2,
+    magnitude: 0.3,
+    offset: 0.1,
   },
+};
+
+// top-of-file: material constructors / presets
+const MATERIAL_CONSTRUCTORS = {
+  lambert: THREE.MeshLambertMaterial,
+  toon: THREE.MeshToonMaterial,
+  standard: THREE.MeshStandardMaterial,
+};
+
+// mapping from quality name to constructor key
+const QUALITY_MAP = {
+  low: 'lambert',
+  medium: 'toon',
+  high: 'standard',
 };
 
 export default class BlockWorld {
@@ -26,7 +40,6 @@ export default class BlockWorld {
     this.game = Game.getInstance();
     this.scene = this.game.scene;
     this.textureResources = this.game.resources.items;
-
     // Ensure textures are using sRGB color space for correct color rendering.
     Object.values(this.textureResources).forEach((res) => {
       if (res instanceof THREE.Texture) {
@@ -36,6 +49,7 @@ export default class BlockWorld {
 
     this.debug = DebugGUI.getInstance();
     this.data = data;
+    this.quality = 'medium';
 
     this.initResources();
     this.generateBlockWorld();
@@ -50,76 +64,63 @@ export default class BlockWorld {
 
   initResources() {
     this.blockGeometry = new THREE.BoxGeometry(1, 1, 1);
-    // Create materials for each block type
-    this.blockMaterials = {
-      [blocks.grass.id]: [
-        // right
-        new THREE.MeshLambertMaterial({
-          map: this.textureResources.grassTextureSide
-        }),
-        // left
-        new THREE.MeshLambertMaterial({
-          map: this.textureResources.grassTextureSide
-        }),
-        // top
-        new THREE.MeshLambertMaterial({
-          map: this.textureResources.grassTexture
-        }),
-        // bottom
-        new THREE.MeshLambertMaterial({
-          map: this.textureResources.dirtTexture
-        }),
-        // front
-        new THREE.MeshLambertMaterial({
-          map: this.textureResources.grassTextureSide
-        }),
-        // back
-        new THREE.MeshLambertMaterial({
-          map: this.textureResources.grassTextureSide
-        }),
-      ],
-      [blocks.dirt.id]: new THREE.MeshLambertMaterial({
-        map: this.textureResources.dirtTexture
-      }),
-      [blocks.stone.id]: new THREE.MeshLambertMaterial({
-        map: this.textureResources.stoneTexture
-      }),
-      [blocks.coalOre.id]: new THREE.MeshLambertMaterial({
-        map: this.textureResources.coalOreTexture
-      }),
-      [blocks.ironOre.id]: new THREE.MeshLambertMaterial({
-        map: this.textureResources.ironOreTexture
-      }),
-      [blocks.goldOre.id]: new THREE.MeshLambertMaterial({
-        map: this.textureResources.goldOreTexture
-      }),
+
+    const ctorKey = QUALITY_MAP[this.quality];
+    const Ctor = MATERIAL_CONSTRUCTORS[ctorKey];
+    const materialCache = new Map(); // key -> THREE.Material
+
+    const getOrCreateMaterial = (tex) => {
+      if (!tex) return null;
+      // choose cache key: try texture.uuid or name or src
+      const key = tex.uuid || tex.name || tex.image?.src || Symbol();
+      if (materialCache.has(key)) return materialCache.get(key);
+
+      const m = new Ctor({ map: tex });
+      materialCache.set(key, m);
+      return m;
     };
 
-    /**
-     * Set texture filtering for pixelated look. This loop handles both the
-     * case where a value in blockMaterials is a single material or an array
-     * (for per-face materials like grass). For each material we set nearest
-     * filtering and disable mipmaps for a crisp, pixel-art aesthetic.
-     */
-    Object.values(this.blockMaterials).forEach(matOrArray => {
-      if (Array.isArray(matOrArray)) {
-        matOrArray.forEach(mat => {
-          if (mat.map) {
-            mat.map.magFilter = THREE.NearestFilter;
-            mat.map.minFilter = THREE.NearestFilter;
-            mat.map.generateMipmaps = false;
-            mat.map.needsUpdate = true;
-          }
-        });
-      } else if (matOrArray.map) {
-        matOrArray.map.magFilter = THREE.NearestFilter;
-        matOrArray.map.minFilter = THREE.NearestFilter;
-        matOrArray.map.generateMipmaps = false;
-        matOrArray.map.needsUpdate = true;
+    // declarative mapping: blockId -> texture or array-of-textures (per-face)
+    const templates = {
+      [blocks.grass.id]: [
+        this.textureResources.grassTextureSide, // right
+        this.textureResources.grassTextureSide, // left
+        this.textureResources.grassTexture,     // top
+        this.textureResources.dirtTexture,      // bottom
+        this.textureResources.grassTextureSide, // front
+        this.textureResources.grassTextureSide, // back
+      ],
+      [blocks.dirt.id]: this.textureResources.dirtTexture,
+      [blocks.stone.id]: this.textureResources.stoneTexture,
+      [blocks.coalOre.id]: this.textureResources.coalOreTexture,
+      [blocks.ironOre.id]: this.textureResources.ironOreTexture,
+      [blocks.goldOre.id]: this.textureResources.goldOreTexture,
+    };
+
+    // build actual materials, reusing from cache when texture is same
+    this.blockMaterials = {};
+    Object.entries(templates).forEach(([blockId, texOrArray]) => {
+      if (Array.isArray(texOrArray)) {
+        this.blockMaterials[blockId] = texOrArray.map(t => getOrCreateMaterial(t));
+      } else {
+        this.blockMaterials[blockId] = getOrCreateMaterial(texOrArray);
       }
     });
 
+    // set pixelated filters only once per texture (iterate texture cache)
+    materialCache.forEach(m => {
+      if (m.map) {
+        m.map.magFilter = THREE.NearestFilter;
+        m.map.minFilter = THREE.NearestFilter;
+        m.map.generateMipmaps = false;
+        m.map.needsUpdate = true;
+      }
+    });
+
+    // keep the cache if you want to dispose later
+    this._materialCache = materialCache;
   }
+
 
   /**
    * High level orchestrator that builds the world data and creates the mesh
@@ -420,6 +421,55 @@ export default class BlockWorld {
     }
   }
 
+  disposeMaterialCache() {
+    if (!this._materialCache) return;
+    this._materialCache.forEach((m) => {
+      try {
+        if (m.map) {
+          // optional: dispose textures if you truly want to free them
+          // m.map.dispose();
+        }
+        m.dispose();
+      } catch (e) {
+        console.warn('disposeMaterialCache error', e);
+      }
+    });
+    this._materialCache = null;
+  }
+
+  // Called when user changes quality in GUI
+  onQualityChange(newQuality) {
+    console.log(newQuality)
+    console.log(`Quality change requested: ${this.quality} → ${newQuality}`);
+
+    if (this.quality === newQuality) {
+      console.log('Quality unchanged, skipping update');
+      return;
+    }
+
+    try {
+      this.quality = newQuality;
+      console.log('Disposing old mesh instances...');
+
+      // dispose old meshes/materials
+      this.disposeOldMeshInstances();
+      this.disposeMaterialCache();
+
+      console.log('Reinitializing resources...');
+
+      // rebuild materials and meshes (keeps existing this.data / terrain)
+      this.initResources();
+
+      console.log('Regenerating mesh instances...');
+      this.generateMeshInstances();
+
+      console.log(`Quality change complete: ${newQuality}`);
+    } catch (error) {
+      console.error('Error during quality change:', error);
+      // Optionally revert to previous quality or show user notification
+    }
+  }
+
   initGUI() {
     this.debug.add(
       WORLD_CONFIG,
@@ -550,5 +600,25 @@ export default class BlockWorld {
       );
     })
 
+    const qualityControl = {
+      quality: this.quality
+    };
+
+    this.debug.add(
+      qualityControl,
+      'quality',
+      {
+        options: {
+          'Low (Diffused)': 'low',
+          'Medium (Toon)': 'medium',
+          'High (Physical)': 'high',
+        },
+        label: 'Graphics Quality',
+        onChange: (q) => {
+          this.onQualityChange(q);
+        },
+      },
+      'Graphics Settings'
+    );
   }
 }

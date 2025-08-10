@@ -13,7 +13,7 @@ export default class DebugFloor {
   }
 
   setFloorInstance() {
-    const GRID_SIZE = 100;
+    const GRID_SIZE = 64;
     const fogUniforms = THREE.UniformsUtils.merge([THREE.UniformsLib['fog']]);
     this.floorGeometry = new THREE.PlaneGeometry(GRID_SIZE, GRID_SIZE, 1, 1);
     this.floorMaterial = new THREE.ShaderMaterial({
