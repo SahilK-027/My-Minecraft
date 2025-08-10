@@ -32,7 +32,7 @@ export default class Renderer {
       antialias: true,
     });
 
-    this.rendererInstance.toneMapping = THREE.AgXToneMapping;
+    this.rendererInstance.toneMapping = THREE.ACESFilmicToneMapping;
     this.debug.add(
       this.rendererInstance,
       'toneMapping',

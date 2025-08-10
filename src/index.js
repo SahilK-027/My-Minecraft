@@ -22,7 +22,7 @@ resources.on('error', ({ id, url, itemsLoaded, itemsTotal }) => {
 });
 
 resources.on('loaded', () => {
-  if (resources.length) {
+  if (Object.keys(resources.items).length) {
     console.log('✅ All assets are loaded. Initializing game…!');
   } else {
     console.log('☑️ No asset to load. Initializing game…!');
