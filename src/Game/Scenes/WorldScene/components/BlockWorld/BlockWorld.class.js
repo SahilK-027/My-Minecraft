@@ -4,7 +4,7 @@ import DebugGUI from '../../../../Utils/DebugGUI';
 import { data } from '../../../../Data/Data';
 import { SimplexNoise } from 'three/examples/jsm/Addons.js';
 import { RandomNumberGenerator } from '../../../../Utils/RandomNumberGenerator.class';
-import { blocks } from '../../../../Data/Blocks';
+import { blocks, resources } from '../../../../Data/Blocks';
 
 const WORLD_CONFIG = {
   width: 64,
@@ -39,9 +39,13 @@ export default class BlockWorld {
   }
 
   generateBlockWorld() {
+    const randomNumberGenerator = new RandomNumberGenerator(WORLD_PARAMS.seed);
+    console.log('object')
+
     this.initBlockWorldTerrain();
-    this.generateBlockWorldTerrain();
-    this.generateBlockWorldMeshInstance();
+    this.generateResources(randomNumberGenerator);
+    this.generateTerrain(randomNumberGenerator);
+    this.generateMeshInstance();
   }
 
   initBlockWorldTerrain() {
@@ -62,8 +66,23 @@ export default class BlockWorld {
     }
   }
 
-  generateBlockWorldTerrain() {
-    const randomNumberGenerator = new RandomNumberGenerator(WORLD_PARAMS.seed);
+  generateResources(randomNumberGenerator) {
+    const simplex = new SimplexNoise(randomNumberGenerator);
+    resources.forEach((resource) => {
+      for (let x = 0; x < WORLD_CONFIG.width; x++) {
+        for (let y = 0; y < WORLD_CONFIG.height; y++) {
+          for (let z = 0; z < WORLD_CONFIG.depth; z++) {
+            const value = simplex.noise3d(x / resource.scale.x, y / resource.scale.y, z / resource.scale.z);
+            if (value > resource.scarcity) {
+              this.setBlockId(x, y, z, resource.id);
+            }
+          }
+        }
+      }
+    })
+  }
+
+  generateTerrain(randomNumberGenerator) {
     const simplex = new SimplexNoise(randomNumberGenerator);
     for (let x = 0; x < WORLD_CONFIG.width; x++) {
       for (let z = 0; z < WORLD_CONFIG.depth; z++) {
@@ -79,12 +98,12 @@ export default class BlockWorld {
 
         height = Math.max(0, Math.min(height, WORLD_CONFIG.height - 1));
 
-        for (let y = 0; y <= height; y++) {
-          if (y < height) {
+        for (let y = 0; y <= WORLD_CONFIG.height; y++) {
+          if (y < height && this.getBlock(x, y, z).id === blocks.empty.id) {
             this.setBlockId(x, y, z, blocks.dirt.id);
           } else if (y === height) {
             this.setBlockId(x, y, z, blocks.grass.id);
-          } else {
+          } else if (y > height) {
             this.setBlockId(x, y, z, blocks.empty.id);
           }
         }
@@ -92,7 +111,7 @@ export default class BlockWorld {
     }
   }
 
-  generateBlockWorldMeshInstance() {
+  generateMeshInstance() {
     if (this.worldGroup) {
       this.scene.remove(this.worldGroup);
       this.worldGroup.traverse((child) => {
@@ -376,5 +395,48 @@ export default class BlockWorld {
       },
       'Blocks Folder'
     );
+    resources.forEach((resource) => {
+      this.debug.add(
+        resource,
+        'color',
+        {
+          color: true,
+          label: `${resource.name} Color`,
+          onChange: () => {
+            this.generateBlockWorld();
+          },
+        },
+        'Resources Folder'
+      );
+      this.debug.add(
+        resource,
+        'scarcity',
+        {
+          min: 0,
+          max: 1,
+          step: 0.001,
+          label: `${resource.name} Scarcity`,
+          onChange: () => {
+            this.generateBlockWorld();
+          },
+        },
+        'Resources Folder'
+      );
+      this.debug.add(
+        resource,
+        'scale',
+        {
+          min: 0,
+          max: 100,
+          step: 0.1,
+          label: `${resource.name} Scale`,
+          onChange: () => {
+            this.generateBlockWorld();
+          },
+        },
+        'Resources Folder'
+      );
+    })
+
   }
 }
