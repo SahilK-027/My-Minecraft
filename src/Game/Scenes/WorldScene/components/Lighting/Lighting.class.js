@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import Game from '../../../../Game.class';
+import DebugGUI from '../../../../Utils/DebugGUI';
 
 export default class Lighting {
   constructor({ helperEnabled = false } = {}) {
@@ -7,35 +8,58 @@ export default class Lighting {
     this.scene = this.game.scene;
     this.resources = this.game.resources;
     this.helperEnabled = helperEnabled;
+    this.debug = DebugGUI.getInstance();
 
     this.setThreeDirectionalLights();
+    this.initGUI();
   }
 
   setThreeDirectionalLights() {
-    // Key light: primary, bright, casts strong shadows
-    this.keyLight = new THREE.DirectionalLight(0xffffff, 4, 0, 2);
-    this.keyLight.position.set(2, 2, -2);
-    this.keyLight.castShadow = true;
-    this.keyLight.shadow.mapSize.set(1024, 1024);
-    this.scene.add(this.keyLight);
+    // Sunlight
+    this.sunLight = new THREE.DirectionalLight(0xfffce5, 5, 0, 2);
+    this.sunLight.position.set(-45, 25, 45);
+    this.sunLight.castShadow = true;
+    this.sunLight.shadow.mapSize.set(512, 512);
+    this.sunLight.shadow.camera.left = -75;
+    this.sunLight.shadow.camera.right = 75;
+    this.sunLight.shadow.camera.bottom = -25;
+    this.sunLight.shadow.camera.top = 35;
+    this.sunLight.shadow.camera.near = 0.1;
+    this.sunLight.shadow.camera.far = 135;
 
-    // Fill light: softer, reduces shadows
-    this.fillLight = new THREE.DirectionalLight(0xffffff, 0.7, 0, 2);
-    this.fillLight.position.set(0, 1.0, 2);
-    this.scene.add(this.fillLight);
-
-    // Back (rim) light: highlights edges
-    this.backLight = new THREE.DirectionalLight(0xffffff, 1.0, 0, 2);
-    this.backLight.position.set(-2, 2, -2);
-    this.scene.add(this.backLight);
+    this.scene.add(this.sunLight);
 
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(this.ambientLight);
 
+    const shadowHelper = new THREE.CameraHelper(this.sunLight.shadow.camera);
+    this.scene.add(shadowHelper);
+
     if (this.helperEnabled) {
-      this.scene.add(new THREE.DirectionalLightHelper(this.keyLight, 0.5));
-      this.scene.add(new THREE.DirectionalLightHelper(this.fillLight, 0.5));
-      this.scene.add(new THREE.DirectionalLightHelper(this.backLight, 0.5));
+      this.scene.add(new THREE.DirectionalLightHelper(this.sunLight, 0.5));
     }
+  }
+
+  initGUI() {
+    this.debug.add(
+      this.sunLight,
+      'color',
+      {
+        color: true,
+        label: 'Sunlight color'
+      },
+      'Light folder'
+    );
+    this.debug.add(
+      this.sunLight,
+      'intensity',
+      {
+        min: 0,
+        max: 10,
+        step: 0.01,
+        label: 'Sunlight intensity'
+      },
+      'Light folder'
+    );
   }
 }

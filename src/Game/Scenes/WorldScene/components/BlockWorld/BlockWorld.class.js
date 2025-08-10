@@ -291,6 +291,8 @@ export default class BlockWorld {
       blockMesh.count = 0;
       blockMesh.userData.blockId = Number(blockId);
       blockMesh.name = `block-${blockId}`;
+      blockMesh.castShadow = true;
+      blockMesh.receiveShadow = true;
 
       meshes.set(Number(blockId), blockMesh); // store by numeric id
     });
