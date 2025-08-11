@@ -6,7 +6,7 @@ In-browser Minecraft-style sandbox game. Dig, build, and explore right from your
 
 ## 🚀 Live
 
-👉🏻 https://simple-minecraft.vercel.app
+👉🏻 https://infinite-procedural-minecraft.vercel.app
 
 ## 🛠 Built With
 - [Three.js](https://github.com/mrdoob/three.js)
