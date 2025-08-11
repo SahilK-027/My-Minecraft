@@ -5,6 +5,8 @@ import { data } from '../../../../Data/Data';
 import { SimplexNoise } from 'three/examples/jsm/Addons.js';
 import { RandomNumberGenerator } from '../../../../Utils/RandomNumberGenerator.class';
 import { blocks, resources } from '../../../../Data/Blocks';
+import { TextureAtlas } from '../../../../Utils/TextureAtlas.class';
+import { BlockGeometry } from './BlockGeometry.class';
 
 const WORLD_CONFIG = {
   width: 64,
@@ -40,6 +42,7 @@ export default class BlockWorld {
     this.game = Game.getInstance();
     this.scene = this.game.scene;
     this.textureResources = this.game.resources.items;
+
     // Ensure textures are using sRGB color space for correct color rendering.
     Object.values(this.textureResources).forEach((res) => {
       if (res instanceof THREE.Texture) {
@@ -51,95 +54,142 @@ export default class BlockWorld {
     this.data = data;
     this.quality = 'medium';
 
+    this.initTextureAtlas();
     this.initResources();
     this.generateBlockWorld();
     this.initGUI();
   }
 
   /**
-   * Create shared geometry and materials for each block type.
-   * Materials use the textures from this.textureResources and are configured
-   * for a pixelated look (nearest filtering and no mipmaps).
+   * Create texture atlas from available textures
    */
+  initTextureAtlas() {
+    console.log('Creating texture atlas...');
 
-  initResources() {
-    this.blockGeometry = new THREE.BoxGeometry(1, 1, 1);
+    // 32x32 textures, 512x512 atlas
+    this.atlas = new TextureAtlas(32, 512);
 
-    const ctorKey = QUALITY_MAP[this.quality];
-    const Ctor = MATERIAL_CONSTRUCTORS[ctorKey];
-    const materialCache = new Map(); // key -> THREE.Material
-
-    const getOrCreateMaterial = (tex) => {
-      if (!tex) return null;
-      // choose cache key: try texture.uuid or name or src
-      const key = tex.uuid || tex.name || tex.image?.src || Symbol();
-      if (materialCache.has(key)) return materialCache.get(key);
-
-      const m = new Ctor({ map: tex });
-      materialCache.set(key, m);
-      return m;
+    // Define block face configurations
+    this.blockConfigs = {
+      [blocks.grass.id]: {
+        faces: {
+          front: 'grassSide',
+          back: 'grassSide',
+          top: 'grassTop',
+          bottom: 'dirt',
+          right: 'grassSide',
+          left: 'grassSide',
+        },
+      },
+      [blocks.dirt.id]: {
+        faces: {
+          front: 'dirt',
+          back: 'dirt',
+          top: 'dirt',
+          bottom: 'dirt',
+          right: 'dirt',
+          left: 'dirt',
+        },
+      },
+      [blocks.stone.id]: {
+        faces: {
+          front: 'stone',
+          back: 'stone',
+          top: 'stone',
+          bottom: 'stone',
+          right: 'stone',
+          left: 'stone',
+        },
+      },
+      [blocks.coalOre.id]: {
+        faces: {
+          front: 'coalOre',
+          back: 'coalOre',
+          top: 'coalOre',
+          bottom: 'coalOre',
+          right: 'coalOre',
+          left: 'coalOre',
+        },
+      },
+      [blocks.ironOre.id]: {
+        faces: {
+          front: 'ironOre',
+          back: 'ironOre',
+          top: 'ironOre',
+          bottom: 'ironOre',
+          right: 'ironOre',
+          left: 'ironOre',
+        },
+      },
+      [blocks.goldOre.id]: {
+        faces: {
+          front: 'goldOre',
+          back: 'goldOre',
+          top: 'goldOre',
+          bottom: 'goldOre',
+          right: 'goldOre',
+          left: 'goldOre',
+        },
+      },
     };
 
-    // declarative mapping: blockId -> texture or array-of-textures (per-face)
-    const templates = {
-      [blocks.grass.id]: [
-        this.textureResources.grassTextureSide, // right
-        this.textureResources.grassTextureSide, // left
-        this.textureResources.grassTexture,     // top
-        this.textureResources.dirtTexture,      // bottom
-        this.textureResources.grassTextureSide, // front
-        this.textureResources.grassTextureSide, // back
-      ],
-      [blocks.dirt.id]: this.textureResources.dirtTexture,
-      [blocks.stone.id]: this.textureResources.stoneTexture,
-      [blocks.coalOre.id]: this.textureResources.coalOreTexture,
-      [blocks.ironOre.id]: this.textureResources.ironOreTexture,
-      [blocks.goldOre.id]: this.textureResources.goldOreTexture,
-    };
+    // Add textures to atlas
+    this.atlas.addTexture('grassTop', this.textureResources.grassTexture);
+    this.atlas.addTexture('grassSide', this.textureResources.grassTextureSide);
+    this.atlas.addTexture('dirt', this.textureResources.dirtTexture);
+    this.atlas.addTexture('stone', this.textureResources.stoneTexture);
+    this.atlas.addTexture('coalOre', this.textureResources.coalOreTexture);
+    this.atlas.addTexture('ironOre', this.textureResources.ironOreTexture);
+    this.atlas.addTexture('goldOre', this.textureResources.goldOreTexture);
 
-    // build actual materials, reusing from cache when texture is same
-    this.blockMaterials = {};
-    Object.entries(templates).forEach(([blockId, texOrArray]) => {
-      if (Array.isArray(texOrArray)) {
-        this.blockMaterials[blockId] = texOrArray.map(t => getOrCreateMaterial(t));
-      } else {
-        this.blockMaterials[blockId] = getOrCreateMaterial(texOrArray);
-      }
-    });
+    // Generate the atlas texture
+    this.atlasTexture = this.atlas.generateAtlasTexture();
 
-    // set pixelated filters only once per texture (iterate texture cache)
-    materialCache.forEach(m => {
-      if (m.map) {
-        m.map.magFilter = THREE.NearestFilter;
-        m.map.minFilter = THREE.NearestFilter;
-        m.map.generateMipmaps = false;
-        m.map.needsUpdate = true;
-      }
-    });
+    if ('colorSpace' in this.atlasTexture) {
+      this.atlasTexture.colorSpace = THREE.SRGBColorSpace;
+    } else {
+      this.atlasTexture.encoding = THREE.sRGBEncoding;
+    }
+    this.atlasTexture.flipY = true;
 
-    // keep the cache if you want to dispose later
-    this._materialCache = materialCache;
+    // Debug: show atlas
+    this.atlas.debugAtlas();
+
+    console.log(
+      'Texture atlas created with',
+      this.atlas.getTextureNames().length,
+      'textures'
+    );
   }
 
+  /**
+   * Create shared material and geometries for each block type using atlas
+   */
+  initResources() {
+    const ctorKey = QUALITY_MAP[this.quality];
+    const MaterialConstructor = MATERIAL_CONSTRUCTORS[ctorKey];
+
+    // Create single material using atlas texture
+    this.atlasMaterial = new MaterialConstructor({
+      map: this.atlasTexture,
+    });
+
+    // Create geometries for each block type with proper UVs
+    this.blockGeometries = BlockGeometry.createBlockGeometries(
+      this.atlas,
+      this.blockConfigs
+    );
+  }
 
   /**
-   * High level orchestrator that builds the world data and creates the mesh
-   * instances. A RandomNumberGenerator seeded with WORLD_PARAMS.seed is used to
-   * provide deterministic noise for both resources and terrain.
+   * Generate the block world data
    */
   generateBlockWorld() {
     const randomNumberGenerator = new RandomNumberGenerator(WORLD_PARAMS.seed);
 
-    // Create empty 3D array for blocks
     this.initBlockWorldTerrain();
-
-    // Scatter ores/resources first (they operate over full 3D volume)
     this.generateResources(randomNumberGenerator);
-
-    // Then generate the 2D-over-XZ terrain surface (dirt + grass on top)
     this.generateTerrain(randomNumberGenerator);
-
-    // Convert the data array into InstancedMesh instances for rendering
     this.generateMeshInstances();
   }
 
@@ -167,8 +217,7 @@ export default class BlockWorld {
   }
 
   /**
-   * Scatter resource blocks (ores etc.) through the world using 3D simplex noise.
-   * If the noise value at a voxel exceeds resource.scarcity, the resource is placed.
+   * Generate resource distribution using noise
    */
   generateResources(randomNumberGenerator) {
     const simplex = new SimplexNoise(randomNumberGenerator);
@@ -177,7 +226,11 @@ export default class BlockWorld {
         for (let y = 0; y < WORLD_CONFIG.height; y++) {
           for (let z = 0; z < WORLD_CONFIG.depth; z++) {
             // Use resource-specific scale to control frequency/size of veins
-            const value = simplex.noise3d(x / resource.scale.x, y / resource.scale.y, z / resource.scale.z);
+            const value = simplex.noise3d(
+              x / resource.scale.x,
+              y / resource.scale.y,
+              z / resource.scale.z
+            );
 
             if (value > resource.scarcity) {
               this.setBlockId(x, y, z, resource.id);
@@ -185,14 +238,11 @@ export default class BlockWorld {
           }
         }
       }
-    })
+    });
   }
 
   /**
-   * Generate surface terrain using 2D simplex noise (x,z). The noise value is
-   * scaled and converted to an integer height; below that height is dirt and
-   * exactly at that height is grass. Note: this logic assumes a single
-   * column 'surface' per (x,z) coordinate.
+   * Generate terrain surface using 2D noise
    */
   generateTerrain(randomNumberGenerator) {
     const simplex = new SimplexNoise(randomNumberGenerator);
@@ -211,14 +261,7 @@ export default class BlockWorld {
         // clamp height into valid range
         height = Math.max(0, Math.min(height, WORLD_CONFIG.height - 1));
 
-        /**
-         * iterate vertical column and assign dirt/grass/empty
-         * NOTE: loop uses <= WORLD_CONFIG.height which will iterate one step
-         * beyond the last index; the code below guards with inBounds checks in
-         * setBlockId/getBlock, but this is a spot to be careful about off-by-one
-         * behaviour if you later change inBounds.
-         */
-        for (let y = 0; y <= WORLD_CONFIG.height; y++) {
+        for (let y = 0; y < WORLD_CONFIG.height; y++) {
           const cell = this.getBlock(x, y, z);
           const currentId = cell ? cell.id : blocks.empty.id;
 
@@ -238,40 +281,22 @@ export default class BlockWorld {
   }
 
   /**
-   * Helper method to Remove previously created instanced meshes and dispose their geometries
-   * and materials to free GPU memory. Note that texture disposal is commented
-   * out — if you want to free textures as well, uncomment the map.dispose() calls.
+   * Dispose old mesh instances
    */
   disposeOldMeshInstances() {
     if (this.worldGroup) {
       this.scene.remove(this.worldGroup);
       this.worldGroup.traverse((child) => {
         if (child.isInstancedMesh) {
-          // dispose geometry
           if (child.geometry) child.geometry.dispose();
-
-          // dispose material(s) safely: may be an array or single material
-          const mat = child.material;
-          if (Array.isArray(mat)) {
-            mat.forEach(m => {
-              if (m) {
-                // optionally dispose the material's texture maps here:
-                // if (m.map) m.map.dispose();
-                m.dispose();
-              }
-            });
-          } else if (mat) {
-            // optionally: if (mat.map) mat.map.dispose();
-            mat.dispose();
-          }
+          if (child.material) child.material.dispose();
         }
       });
     }
   }
 
   /**
-   * Create InstancedMesh objects for each block type and populate them with
-   * instance matrices only for visible (non-obscured) blocks.
+   * Create mesh instances using single InstancedMesh with atlas material
    */
   generateMeshInstances() {
     if (this.worldGroup) {
@@ -279,57 +304,71 @@ export default class BlockWorld {
     }
 
     const { width, height, depth } = WORLD_CONFIG;
-    // worst-case number of instances. we will generate lesser than this
-    const maxCount = width * height * depth;
     const halfW = width / 2;
     const halfD = depth / 2;
 
     this.worldGroup = new THREE.Group();
 
-    // Meshes map
-    const meshes = new Map();
-
-    // Iterate entries to get blockId -> material
-    Object.entries(this.blockMaterials).forEach(([blockId, material]) => {
-      const blockMesh = new THREE.InstancedMesh(this.blockGeometry, material, maxCount);
-      blockMesh.count = 0;
-      blockMesh.userData.blockId = Number(blockId);
-      blockMesh.name = `block-${blockId}`;
-      blockMesh.castShadow = true;
-      blockMesh.receiveShadow = true;
-
-      meshes.set(Number(blockId), blockMesh); // store by numeric id
-    });
-
-    const matrix = new THREE.Matrix4();
-
+    // ---- PASS 1: Count ----
+    const counts = new Map();
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
         for (let z = 0; z < depth; z++) {
-          const { id: blockId } = this.getBlock(x, y, z);
-          if (blockId === blocks.empty.id || this.isBlockObscured(x, y, z)) continue;
-
-          const blockMesh = meshes.get(blockId);
-          if (!blockMesh) continue; // just in case a material is missing
-
-          const instanceId = blockMesh.count;
-          matrix.makeTranslation(x - halfW + 0.5, y, z - halfD + 0.5);
-          blockMesh.setMatrixAt(instanceId, matrix);
-
-          this.setBlockInstanceId(x, y, z, instanceId);
-          blockMesh.count++;
+          const { id } = this.getBlock(x, y, z);
+          if (id === blocks.empty.id) continue;
+          if (this.isBlockObscured(x, y, z)) continue;
+          counts.set(id, (counts.get(id) || 0) + 1);
         }
       }
     }
 
-    // add all meshes to group
-    for (const m of meshes.values()) this.worldGroup.add(m);
+    // ---- PASS 2: Allocate meshes ----
+    const meshes = new Map();
+    for (const [blockId, count] of counts) {
+      const geometry = this.blockGeometries.get(blockId);
+      if (!geometry) continue;
 
-    // keep a reference for later use
-    this.meshes = meshes; // Map of blockId -> InstancedMesh
+      const mesh = new THREE.InstancedMesh(geometry, this.atlasMaterial, count);
+      mesh.count = 0;
+      mesh.userData.blockId = blockId;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      meshes.set(blockId, mesh);
+    }
+
+    // ---- PASS 3: Fill ----
+    const matrix = new THREE.Matrix4();
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        for (let z = 0; z < depth; z++) {
+          const { id } = this.getBlock(x, y, z);
+          if (id === blocks.empty.id) continue;
+          if (this.isBlockObscured(x, y, z)) continue;
+
+          const mesh = meshes.get(id);
+          if (!mesh) continue;
+
+          matrix.makeTranslation(x - halfW + 0.5, y, z - halfD + 0.5);
+          mesh.setMatrixAt(mesh.count, matrix);
+          this.setBlockInstanceId(x, y, z, mesh.count);
+          mesh.count++;
+        }
+      }
+    }
+
+    // ---- PASS 4: Finalize ----
+    for (const mesh of meshes.values()) {
+      this.worldGroup.add(mesh);
+    }
+
+    this.meshes = meshes;
     this.scene.add(this.worldGroup);
-  }
 
+    console.log(
+      `Generated world with ${meshes.size} mesh types, total instances:`,
+      Array.from(meshes.values()).reduce((sum, mesh) => sum + mesh.count, 0)
+    );
+  }
 
   /**
    * Gets the block data at (x, y, z)
@@ -404,8 +443,8 @@ export default class BlockWorld {
   isBlockObscured(x, y, z) {
     const up = this.getBlock(x, y + 1, z)?.id ?? blocks.empty.id;
     const down = this.getBlock(x, y - 1, z)?.id ?? blocks.empty.id;
-    const left = this.getBlock(x + 1, y, z)?.id ?? blocks.empty.id;
-    const right = this.getBlock(x - 1, y, z)?.id ?? blocks.empty.id;
+    const left = this.getBlock(x - 1, y, z)?.id ?? blocks.empty.id;
+    const right = this.getBlock(x + 1, y, z)?.id ?? blocks.empty.id;
     const forward = this.getBlock(x, y, z + 1)?.id ?? blocks.empty.id;
     const back = this.getBlock(x, y, z - 1)?.id ?? blocks.empty.id;
 
@@ -440,36 +479,39 @@ export default class BlockWorld {
     this._materialCache = null;
   }
 
-  // Called when user changes quality in GUI
+  /**
+   * Handle quality changes by recreating materials
+   */
   onQualityChange(newQuality) {
-    console.log(newQuality)
-    console.log(`Quality change requested: ${this.quality} → ${newQuality}`);
+    if (this.quality === newQuality) return;
 
-    if (this.quality === newQuality) {
-      console.log('Quality unchanged, skipping update');
-      return;
-    }
+    console.log(`Quality change: ${this.quality} → ${newQuality}`);
 
     try {
       this.quality = newQuality;
-      console.log('Disposing old mesh instances...');
 
-      // dispose old meshes/materials
-      this.disposeOldMeshInstances();
-      this.disposeMaterialCache();
+      // Dispose old material
+      if (this.atlasMaterial) {
+        this.atlasMaterial.dispose();
+      }
 
-      console.log('Reinitializing resources...');
+      // Create new material with same atlas texture
+      const ctorKey = QUALITY_MAP[this.quality];
+      const MaterialConstructor = MATERIAL_CONSTRUCTORS[ctorKey];
+      this.atlasMaterial = new MaterialConstructor({
+        map: this.atlasTexture,
+      });
 
-      // rebuild materials and meshes (keeps existing this.data / terrain)
-      this.initResources();
-
-      console.log('Regenerating mesh instances...');
-      this.generateMeshInstances();
+      // Update all existing meshes with new material
+      if (this.meshes) {
+        this.meshes.forEach((mesh) => {
+          mesh.material = this.atlasMaterial;
+        });
+      }
 
       console.log(`Quality change complete: ${newQuality}`);
     } catch (error) {
       console.error('Error during quality change:', error);
-      // Optionally revert to previous quality or show user notification
     }
   }
 
@@ -601,10 +643,10 @@ export default class BlockWorld {
         },
         'Resources Folder'
       );
-    })
+    });
 
     const qualityControl = {
-      quality: this.quality
+      quality: this.quality,
     };
 
     this.debug.add(

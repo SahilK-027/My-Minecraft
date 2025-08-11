@@ -23,7 +23,7 @@ export default class Camera {
       near,
       far
     );
-    this.orbitCamera.position.set(-18, 14, 23);
+    this.orbitCamera.position.set(-18, 14, -23);
     this.scene.add(this.orbitCamera);
   }
 
