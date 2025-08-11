@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import Game from '../../../../Game.class';
 import DebugGUI from '../../../../Utils/DebugGUI';
-import { data } from '../../../../Data/Data';
 import { SimplexNoise } from 'three/examples/jsm/Addons.js';
 import { RandomNumberGenerator } from '../../../../Utils/RandomNumberGenerator.class';
 import { blocks, resources } from '../../../../Data/Blocks';
@@ -23,14 +22,12 @@ const WORLD_PARAMS = {
   },
 };
 
-// top-of-file: material constructors / presets
 const MATERIAL_CONSTRUCTORS = {
   lambert: THREE.MeshLambertMaterial,
   toon: THREE.MeshToonMaterial,
   standard: THREE.MeshStandardMaterial,
 };
 
-// mapping from quality name to constructor key
 const QUALITY_MAP = {
   low: 'lambert',
   medium: 'toon',
@@ -44,7 +41,6 @@ export default class BlockWorld {
     this.textureResources = this.game.resources.items;
 
     this.debug = DebugGUI.getInstance();
-    this.data = data;
     this.quality = 'medium';
 
     this.initTextureAtlas();
@@ -53,16 +49,12 @@ export default class BlockWorld {
     this.initGUI();
   }
 
-  /**
-   * Create texture atlas from available textures
-   */
   initTextureAtlas() {
     console.log('Creating texture atlas...');
 
     // 32x32 textures, 512x512 atlas
     this.atlas = new TextureAtlas(32, 512);
 
-    // Define block face configurations
     this.blockConfigs = {
       [blocks.grass.id]: {
         faces: {
@@ -126,7 +118,6 @@ export default class BlockWorld {
       },
     };
 
-    // Add textures to atlas
     this.atlas.addTexture('grassTop', this.textureResources.grassTexture);
     this.atlas.addTexture('grassSide', this.textureResources.grassTextureSide);
     this.atlas.addTexture('dirt', this.textureResources.dirtTexture);
@@ -135,7 +126,6 @@ export default class BlockWorld {
     this.atlas.addTexture('ironOre', this.textureResources.ironOreTexture);
     this.atlas.addTexture('goldOre', this.textureResources.goldOreTexture);
 
-    // Generate the atlas texture
     this.atlasTexture = this.atlas.generateAtlasTexture();
 
     if ('colorSpace' in this.atlasTexture) {
@@ -154,28 +144,20 @@ export default class BlockWorld {
     );
   }
 
-  /**
-   * Create shared material and geometries for each block type using atlas
-   */
   initResources() {
     const ctorKey = QUALITY_MAP[this.quality];
     const MaterialConstructor = MATERIAL_CONSTRUCTORS[ctorKey];
 
-    // Create single material using atlas texture
     this.atlasMaterial = new MaterialConstructor({
       map: this.atlasTexture,
     });
 
-    // Create geometries for each block type with proper UVs
     this.blockGeometries = BlockGeometry.createBlockGeometries(
       this.atlas,
       this.blockConfigs
     );
   }
 
-  /**
-   * Generate the block world data
-   */
   generateBlockWorld() {
     const randomNumberGenerator = new RandomNumberGenerator(WORLD_PARAMS.seed);
 
@@ -185,10 +167,6 @@ export default class BlockWorld {
     this.generateMeshInstances();
   }
 
-  /**
-   * Initialize the this.data 3D array with empty blocks. Structure is
-   * data[x][y][z] to allow fast lookup by x first (column-major in x).
-   */
   initBlockWorldTerrain() {
     this.data = [];
     for (let x = 0; x < WORLD_CONFIG.width; x++) {
@@ -208,16 +186,12 @@ export default class BlockWorld {
     }
   }
 
-  /**
-   * Generate resource distribution using noise
-   */
   generateResources(randomNumberGenerator) {
     const simplex = new SimplexNoise(randomNumberGenerator);
     resources.forEach((resource) => {
       for (let x = 0; x < WORLD_CONFIG.width; x++) {
         for (let y = 0; y < WORLD_CONFIG.height; y++) {
           for (let z = 0; z < WORLD_CONFIG.depth; z++) {
-            // Use resource-specific scale to control frequency/size of veins
             const value = simplex.noise3d(
               x / resource.scale.x,
               y / resource.scale.y,
@@ -233,9 +207,6 @@ export default class BlockWorld {
     });
   }
 
-  /**
-   * Generate terrain surface using 2D noise
-   */
   generateTerrain(randomNumberGenerator) {
     const simplex = new SimplexNoise(randomNumberGenerator);
     for (let x = 0; x < WORLD_CONFIG.width; x++) {
@@ -272,9 +243,6 @@ export default class BlockWorld {
     }
   }
 
-  /**
-   * Dispose old mesh instances
-   */
   disposeOldMeshInstances() {
     if (this.worldGroup) {
       this.scene.remove(this.worldGroup);
@@ -287,9 +255,6 @@ export default class BlockWorld {
     }
   }
 
-  /**
-   * Create mesh instances using single InstancedMesh with atlas material
-   */
   generateMeshInstances() {
     if (this.worldGroup) {
       this.disposeOldMeshInstances();
@@ -362,13 +327,6 @@ export default class BlockWorld {
     );
   }
 
-  /**
-   * Gets the block data at (x, y, z)
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   * @returns {{id: number, instanceId: number}}
-   */
   getBlock(x, y, z) {
     if (this.inBounds(x, y, z)) {
       return this.data[x][y][z];
@@ -377,39 +335,18 @@ export default class BlockWorld {
     }
   }
 
-  /**
-   * Sets the block id for the block at (x, y, z)
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   * @param {number} id
-   */
   setBlockId(x, y, z, id) {
     if (this.inBounds(x, y, z)) {
       this.data[x][y][z].id = id;
     }
   }
 
-  /**
-   * Sets the block instance id for the block at (x, y, z)
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   * @param {number} instanceId
-   */
   setBlockInstanceId(x, y, z, instanceId) {
     if (this.inBounds(x, y, z)) {
       this.data[x][y][z].instanceId = instanceId;
     }
   }
 
-  /**
-   * Checks if the (x, y, z) coordinates are within bounds
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   * @returns {boolean}
-   */
   inBounds(x, y, z) {
     if (
       x >= 0 &&
@@ -427,10 +364,6 @@ export default class BlockWorld {
 
   /**
    * Returns true if this block is completely hidden by other blocks
-   * @param {number} x
-   * @param {number} y
-   * @param {number} z
-   * @returns {boolean}
    */
   isBlockObscured(x, y, z) {
     const up = this.getBlock(x, y + 1, z)?.id ?? blocks.empty.id;
@@ -440,7 +373,6 @@ export default class BlockWorld {
     const forward = this.getBlock(x, y, z + 1)?.id ?? blocks.empty.id;
     const back = this.getBlock(x, y, z - 1)?.id ?? blocks.empty.id;
 
-    // If any of the block's sides is exposed, it is not obscured
     if (
       up === blocks.empty.id ||
       down === blocks.empty.id ||
@@ -455,25 +387,6 @@ export default class BlockWorld {
     }
   }
 
-  disposeMaterialCache() {
-    if (!this._materialCache) return;
-    this._materialCache.forEach((m) => {
-      try {
-        if (m.map) {
-          // optional: dispose textures if you truly want to free them
-          // m.map.dispose();
-        }
-        m.dispose();
-      } catch (e) {
-        console.warn('disposeMaterialCache error', e);
-      }
-    });
-    this._materialCache = null;
-  }
-
-  /**
-   * Handle quality changes by recreating materials
-   */
   onQualityChange(newQuality) {
     if (this.quality === newQuality) return;
 
@@ -482,19 +395,16 @@ export default class BlockWorld {
     try {
       this.quality = newQuality;
 
-      // Dispose old material
       if (this.atlasMaterial) {
         this.atlasMaterial.dispose();
       }
 
-      // Create new material with same atlas texture
       const ctorKey = QUALITY_MAP[this.quality];
       const MaterialConstructor = MATERIAL_CONSTRUCTORS[ctorKey];
       this.atlasMaterial = new MaterialConstructor({
         map: this.atlasTexture,
       });
 
-      // Update all existing meshes with new material
       if (this.meshes) {
         this.meshes.forEach((mesh) => {
           mesh.material = this.atlasMaterial;

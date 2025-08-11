@@ -9,11 +9,11 @@ export default class World {
     this.game = Game.getInstance();
     this.scene = this.game.scene;
 
-    /**
-     * Scene objects
-     */
     this.blockWorld = new BlockWorld();
-    this.player = new Player(this.game.cameraInstance.FPPCamera, this.game.cameraInstance.FPPControls);
+    this.player = new Player(
+      this.game.cameraInstance.FPPCamera,
+      this.game.cameraInstance.FPPControls
+    );
     this.debugFloor = new DebugFloor();
 
     this.lighting = new Lighting({ helperEnabled: false });

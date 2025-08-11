@@ -1,4 +1,3 @@
-// TextureAtlas.class (patched)
 import * as THREE from 'three';
 
 export class TextureAtlas {
@@ -32,22 +31,20 @@ export class TextureAtlas {
         index: this.currentIndex,
         minU: x / this.atlasSize,
         maxU: (x + this.textureSize) / this.atlasSize,
-        // NOTE: since atlasTexture.flipY = false, we flip V here
-        minV: 1 - (y + this.textureSize) / this.atlasSize,
+        minV: 1 - (y + this.textureSize) / this.atlasSize, // NOTE: since atlasTexture.flipY = false, we flip V here
         maxV: 1 - y / this.atlasSize,
         row,
         col,
       };
       this.textureMap.set(name, uvData);
       this.currentIndex++;
-      // always mark the CanvasTexture as updated after drawing
+
       if (this.atlasTexture) this.atlasTexture.needsUpdate = true;
       return uvData;
     };
 
     const drawImg = (img) => {
       try {
-        // clear the cell first (optional)
         this.ctx.clearRect(x, y, this.textureSize, this.textureSize);
         this.ctx.drawImage(img, x, y, this.textureSize, this.textureSize);
       } catch (e) {
@@ -59,11 +56,9 @@ export class TextureAtlas {
     if (texture && texture.image) {
       const img = texture.image;
 
-      // If ImageBitmap or complete HTMLImageElement
       if (img instanceof ImageBitmap || img.complete === true) {
         drawImg(img);
       } else if (img && typeof img.addEventListener === 'function') {
-        // not yet loaded — attach handlers
         const onLoad = () => {
           drawImg(img);
           img.removeEventListener('load', onLoad);
@@ -77,12 +72,10 @@ export class TextureAtlas {
         img.addEventListener('load', onLoad);
         img.addEventListener('error', onError);
       } else {
-        // fallback: try drawing anyway
         drawImg(img);
       }
     } else {
       console.warn('Texture image not available yet for', name);
-      // Create uvData anyway so callers see something — they'll likely get updated when image loads
       return updateUV();
     }
 
@@ -90,7 +83,6 @@ export class TextureAtlas {
   }
 
   generateAtlasTexture() {
-    // keep for compatibility — return the existing CanvasTexture
     if (!this.atlasTexture) {
       this.atlasTexture = new THREE.CanvasTexture(this.canvas);
     }
@@ -108,7 +100,6 @@ export class TextureAtlas {
 
   createFaceUVs(uvData) {
     const { minU, maxU, minV, maxV } = uvData;
-    // vertex order assumed: bottom-left, bottom-right, top-right, top-left
     return [
       minU,
       maxV, // bottom-left
@@ -169,7 +160,5 @@ export class TextureAtlas {
     debugDiv.appendChild(title);
     debugDiv.appendChild(img);
     document.body.appendChild(debugDiv);
-
-    console.log('Texture Atlas Map:', this.textureMap);
   }
 }
