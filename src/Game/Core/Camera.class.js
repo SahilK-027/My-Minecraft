@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import Game from '../Game.class';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
 export default class Camera {
   constructor(fov = 45, near = 0.1, far = 1000) {
@@ -9,35 +10,52 @@ export default class Camera {
     this.sizes = this.game.sizes;
     this.scene = this.game.scene;
 
-    this.setPerspectiveCameraInstance(fov, near, far);
-    this.setOrbitControls();
+    this.setOrbitCamera(fov, near, far);
+    this.setFPPCamera(80, near, far);
+    this.setControls();
   }
 
-  setPerspectiveCameraInstance(fov, near, far) {
+  setOrbitCamera(fov, near, far) {
     const aspectRatio = this.sizes.width / this.sizes.height;
-    this.cameraInstance = new THREE.PerspectiveCamera(
+    this.orbitCamera = new THREE.PerspectiveCamera(
       fov,
       aspectRatio,
       near,
       far
     );
-    this.cameraInstance.position.set(-18, 14, 23);
-    this.scene.add(this.cameraInstance);
+    this.orbitCamera.position.set(-18, 14, 23);
+    this.scene.add(this.orbitCamera);
   }
 
-  setOrbitControls() {
-    this.controls = new OrbitControls(this.cameraInstance, this.canvas);
-    this.controls.enableDamping = true;
-    this.controls.maxPolarAngle = Math.PI / 2.3;
+  setFPPCamera(fov, near, far) {
+    const aspectRatio = this.sizes.width / this.sizes.height;
+    this.FPPCamera = new THREE.PerspectiveCamera(
+      fov,
+      aspectRatio,
+      near,
+      far
+    );
+    this.FPPCamera.position.set(-18, 14, 23);
+    this.scene.add(this.FPPCamera);
+  }
+
+  setControls() {
+    this.orbitControls = new OrbitControls(this.orbitCamera, this.canvas);
+    this.orbitControls.enableDamping = true;
+    this.orbitControls.maxPolarAngle = Math.PI / 2.3;
+
+    this.FPPControls = new PointerLockControls(this.FPPCamera, document.body);
   }
 
   resize() {
     const aspectRatio = this.sizes.width / this.sizes.height;
-    this.cameraInstance.aspect = aspectRatio;
-    this.cameraInstance.updateProjectionMatrix();
+    this.orbitCamera.aspect = aspectRatio;
+    this.orbitCamera.updateProjectionMatrix();
+    this.FPPCamera.aspect = aspectRatio;
+    this.FPPCamera.updateProjectionMatrix();
   }
 
   update() {
-    this.controls.update();
+    this.orbitControls.update();
   }
 }

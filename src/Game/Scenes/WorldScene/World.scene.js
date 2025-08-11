@@ -13,11 +13,13 @@ export default class World {
      * Scene objects
      */
     this.blockWorld = new BlockWorld();
-    this.player = new Player();
+    this.player = new Player(this.game.cameraInstance.FPPCamera, this.game.cameraInstance.FPPControls);
     this.debugFloor = new DebugFloor();
 
     this.lighting = new Lighting({ helperEnabled: false });
   }
 
-  update() { }
+  update(delta) {
+    this.player.applyInputs(delta);
+  }
 }

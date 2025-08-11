@@ -22,10 +22,11 @@ export default class Game {
     this.time = new Time();
     this.debug = new DebugGUI();
     this.scene = new THREE.Scene();
-    this.camera = new Camera();
     this.themeConfig = getThemeConfig('windsweptHills');
+    this.cameraInstance = new Camera();
     this.world = new World();
     this.player = this.world.player;
+    this.camera = this.cameraInstance.orbitCamera;
     this.renderer = new Renderer();
 
     this.time.on('animate', () => {
@@ -44,14 +45,19 @@ export default class Game {
   }
 
   resize() {
-    this.camera.resize();
+    this.cameraInstance.resize();
     this.renderer.resize();
   }
 
   update(delta) {
-    this.camera.update();
-    this.world.update();
-    this.renderer.update(delta);
+    if (this.player && this.player.controls) {
+      this.camera = this.player.controls.isLocked
+        ? this.cameraInstance.FPPCamera
+        : this.cameraInstance.orbitCamera;
+    }
+    this.cameraInstance.update();
+    this.world.update(delta);
+    this.renderer.update();
   }
 
   destroy() {

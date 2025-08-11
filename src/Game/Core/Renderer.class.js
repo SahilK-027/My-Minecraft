@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import Game from '../Game.class';
 import PerformanceMonitor from '../Utils/PerformanceMonitor.class';
-import Player from '../Entities/Player.class';
 
 export default class Renderer {
   constructor() {
@@ -9,9 +8,8 @@ export default class Renderer {
     this.canvas = this.game.canvas;
     this.sizes = this.game.sizes;
     this.scene = this.game.scene;
-    this.player = this.game.player;
-    this.TPPCamera = this.game.camera.cameraInstance;
-    this.FPPCamera = this.player.FPPCamera;
+    this.camera = this.game.camera;
+
     this.renderer = this.game.renderer;
     this.debug = this.game.debug;
     this.themeConfig = this.game.themeConfig;
@@ -66,15 +64,12 @@ export default class Renderer {
   resize() {
     this.rendererInstance.setSize(this.sizes.width, this.sizes.height);
     this.rendererInstance.setPixelRatio(this.sizes.pixelRatio);
-    this.FPPCamera.aspect = this.sizes.width / this.sizes.height;
-    this.FPPCamera.updateProjectionMatrix();
   }
 
-  update(delta) {
+  update() {
     this.perf.beginFrame();
-    this.player.applyInputs(delta);
-    this.rendererCamera = this.player.controls.isLocked ? this.FPPCamera : this.TPPCamera;
-    this.rendererInstance.render(this.scene, this.rendererCamera);
+    const cameraToRender = this.game.camera;
+    this.rendererInstance.render(this.scene, cameraToRender);
     this.perf.endFrame();
   }
 }

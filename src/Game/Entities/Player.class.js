@@ -8,13 +8,12 @@ export default class Player {
   maxSpeed = 10;
   velocity = new THREE.Vector3();
 
-  FPPCamera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 200);
-  controls = new PointerLockControls(this.FPPCamera, document.body);
+  constructor(FPPCamera, controls) {
+    this.FPPCamera = FPPCamera;
+    this.controls = controls;
 
-  constructor() {
     this.game = Game.getInstance();
     this.scene = this.game.scene;
-    this.TPPCamera = this.game.camera.cameraInstance;
     this.resources = this.game.resources;
     this.debug = DebugGUI.getInstance();
 
