@@ -7,37 +7,41 @@ export const blocks = {
     id: 1,
     name: 'grass',
   },
-  dirt: {
+  snow: {
     id: 2,
+    name: 'snow',
+  },
+  dirt: {
+    id: 3,
     name: 'dirt',
   },
   stone: {
-    id: 3,
+    id: 4,
     name: 'stone',
     scale: {
       x: 52,
       y: 35,
       z: 40,
     },
-    scarcity: 0.59
+    scarcity: 0.59,
   },
   coalOre: {
-    id: 4,
+    id: 5,
     name: 'coalOre',
     scale: { x: 45, y: 30, z: 42 },
-    scarcity: 0.6
+    scarcity: 0.6,
   },
   ironOre: {
-    id: 5,
+    id: 6,
     name: 'ironOre',
     scale: { x: 18.9, y: 54.2, z: 41 },
-    scarcity: 0.85
+    scarcity: 0.85,
   },
   goldOre: {
-    id: 6,
+    id: 7,
     name: 'goldOre',
     scale: { x: 50, y: 55, z: 52 },
-    scarcity: 0.9
+    scarcity: 0.9,
   },
 };
 

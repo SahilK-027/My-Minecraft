@@ -42,6 +42,7 @@ export default class BlockWorld {
 
     this.debug = DebugGUI.getInstance();
     this.quality = 'medium';
+    this.currentSeason = 'winter';
 
     this.initTextureAtlas();
     this.initResources();
@@ -64,6 +65,16 @@ export default class BlockWorld {
           bottom: 'dirt',
           right: 'grassSide',
           left: 'grassSide',
+        },
+      },
+      [blocks.snow.id]: {
+        faces: {
+          front: 'snowSide',
+          back: 'snowSide',
+          top: 'snowTop',
+          bottom: 'dirt',
+          right: 'snowSide',
+          left: 'snowSide',
         },
       },
       [blocks.dirt.id]: {
@@ -119,7 +130,9 @@ export default class BlockWorld {
     };
 
     this.atlas.addTexture('grassTop', this.textureResources.grassTexture);
-    this.atlas.addTexture('grassSide', this.textureResources.grassTextureSide);
+    this.atlas.addTexture('grassSide', this.textureResources.grassSideTexture);
+    this.atlas.addTexture('snowTop', this.textureResources.snowTexture);
+    this.atlas.addTexture('snowSide', this.textureResources.snowSideTexture);
     this.atlas.addTexture('dirt', this.textureResources.dirtTexture);
     this.atlas.addTexture('stone', this.textureResources.stoneTexture);
     this.atlas.addTexture('coalOre', this.textureResources.coalOreTexture);
@@ -233,7 +246,11 @@ export default class BlockWorld {
             this.setBlockId(x, y, z, blocks.dirt.id);
           } else if (y === height) {
             // the top-most voxel becomes grass
-            this.setBlockId(x, y, z, blocks.grass.id);
+            if (this.currentSeason === 'winter') {
+              this.setBlockId(x, y, z, blocks.snow.id);
+            } else {
+              this.setBlockId(x, y, z, blocks.grass.id);
+            }
           } else if (y > height) {
             // above the surface remains empty
             this.setBlockId(x, y, z, blocks.empty.id);

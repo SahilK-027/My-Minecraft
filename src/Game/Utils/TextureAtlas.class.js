@@ -23,6 +23,7 @@ export class TextureAtlas {
 
     const row = Math.floor(this.currentIndex / this.texturesPerRow);
     const col = this.currentIndex % this.texturesPerRow;
+
     const x = col * this.textureSize;
     const y = row * this.textureSize;
 
@@ -99,16 +100,16 @@ export class TextureAtlas {
   }
 
   createFaceUVs(uvData) {
-    const { minU, maxU, minV, maxV } = uvData;
+    const inset = 0.75 / this.atlasSize;
     return [
-      minU,
-      maxV, // bottom-left
-      maxU,
-      maxV, // bottom-right
-      maxU,
-      minV, // top-right
-      minU,
-      minV, // top-left
+      uvData.minU + inset,
+      uvData.maxV - inset,
+      uvData.maxU - inset,
+      uvData.maxV - inset,
+      uvData.maxU - inset,
+      uvData.minV + inset,
+      uvData.minU + inset,
+      uvData.minV + inset,
     ];
   }
 
@@ -120,7 +121,7 @@ export class TextureAtlas {
     ctx.drawImage(this.canvas, 0, 0);
 
     const cellSize = this.textureSize;
-    ctx.strokeStyle = 'grey';
+    ctx.strokeStyle = '#808080';
     ctx.lineWidth = 1;
 
     for (let x = 0; x <= atlasCanvas.width; x += cellSize) {

@@ -17,7 +17,7 @@ export default class Lighting {
   setThreePointLights() {
     // ---------- KEY LIGHT (Sun) ----------
     this.keyLight = new THREE.DirectionalLight(0xfff1d6, 3.0);
-    this.keyLight.position.set(-70, 52, -8);
+    this.keyLight.position.set(-120, 52, -8);
     this.keyLight.castShadow = true;
 
     this.keyLight.shadow.mapSize.set(512, 512);
@@ -29,7 +29,7 @@ export default class Lighting {
     this.keyLight.shadow.camera.near = 0.1;
     this.keyLight.shadow.camera.far = 350;
     this.keyLight.shadow.radius = 2;
-    this.keyLight.shadow.bias = -0.0005;
+    this.keyLight.shadow.bias = -0.00155;
 
     this.scene.add(this.keyLight);
 
