@@ -28,7 +28,7 @@ export default class Game {
     this.world = new World();
 
     this.time.on('animate', () => {
-      this.update();
+      this.update(this.time.delta);
     });
     this.sizes.on('resize', () => {
       this.resize();
@@ -47,7 +47,7 @@ export default class Game {
     this.renderer.resize();
   }
 
-  update() {
+  update(delta) {
     this.camera.update();
     this.world.update();
     this.renderer.update();
