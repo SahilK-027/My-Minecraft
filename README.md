@@ -1,4 +1,5 @@
-# 🪵 Simple Minecraft
+# 🪵 Infinite Procedural Minecraft
+
 In-browser Minecraft-style sandbox game. Dig, build, and explore right from your browser!
 
 > [!WARNING]  
@@ -9,8 +10,10 @@ In-browser Minecraft-style sandbox game. Dig, build, and explore right from your
 👉🏻 https://infinite-procedural-minecraft.vercel.app
 
 ## 🛠 Built With
+
 - [Three.js](https://github.com/mrdoob/three.js)
 - [Three.js Game Development Template](https://github.com/SahilK-027/threejs-gamedev-template)
 
 ## 🤩 Inspirations
+
 - https://youtu.be/GLwshsTKWZ4?feature=shared
