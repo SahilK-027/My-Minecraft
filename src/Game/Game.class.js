@@ -24,8 +24,9 @@ export default class Game {
     this.scene = new THREE.Scene();
     this.camera = new Camera();
     this.themeConfig = getThemeConfig('windsweptHills');
-    this.renderer = new Renderer();
     this.world = new World();
+    this.player = this.world.player;
+    this.renderer = new Renderer();
 
     this.time.on('animate', () => {
       this.update(this.time.delta);
@@ -37,7 +38,7 @@ export default class Game {
 
   static getInstance() {
     if (!Game.instance) {
-      Game.instance = new DebugGUI();
+      Game.instance = new Game();
     }
     return Game.instance;
   }
@@ -50,7 +51,7 @@ export default class Game {
   update(delta) {
     this.camera.update();
     this.world.update();
-    this.renderer.update();
+    this.renderer.update(delta);
   }
 
   destroy() {

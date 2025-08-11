@@ -2,6 +2,7 @@ import Game from '../../Game.class';
 import DebugFloor from './components/DebugFloor/DebugFloor.class';
 import Lighting from './components/Lighting/Lighting.class';
 import BlockWorld from './components/BlockWorld/BlockWorld.class';
+import Player from '../../Entities/Player.class';
 
 export default class World {
   constructor() {
@@ -12,10 +13,11 @@ export default class World {
      * Scene objects
      */
     this.blockWorld = new BlockWorld();
+    this.player = new Player();
     this.debugFloor = new DebugFloor();
 
     this.lighting = new Lighting({ helperEnabled: false });
   }
 
-  update() {}
+  update() { }
 }

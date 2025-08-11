@@ -16,8 +16,8 @@ const WORLD_PARAMS = {
   seed: 3608,
   terrain: {
     scale: 30,
-    magnitude: 0.3,
-    offset: 0.1,
+    magnitude: 0.14,
+    offset: 0.2,
   },
 };
 

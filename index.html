@@ -8,7 +8,14 @@
     <title>Simple Minecraft</title>
   </head>
   <body>
-    <div id="progress"><div id="bar"></div></div>
+    <div class="loader">
+      <div id="progress"><div id="bar"></div></div>
+    </div>
+    <div class="game-overlay">
+      <p>Current location:</p>
+      <p id="coordinates"></p>
+    </div>
+
     <canvas id="three"></canvas>
     <script type="module" src="/src/index.js"></script>
   </body>
