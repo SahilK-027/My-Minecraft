@@ -16,6 +16,7 @@ export default class Player {
     this.scene = this.game.scene;
     this.resources = this.game.resources;
     this.debug = DebugGUI.getInstance();
+    this.isDebugMode = this.game.isDebugMode;
 
     this.keyboard = new KeyboardControls({
       controls: this.controls,
@@ -28,7 +29,9 @@ export default class Player {
     this.playerPosition.set(15, 10, 8);
     this.scene.add(this.FPPCamera);
 
-    this.initGUI();
+    if (this.isDebugMode) {
+      this.initGUI();
+    }
   }
 
   applyInputs(delta) {
@@ -42,7 +45,8 @@ export default class Player {
       this.controls.moveForward(this.velocity.z * delta);
     }
 
-    document.getElementById('coordinates').innerHTML = this.playerPositionToString();
+    document.getElementById('coordinates').innerHTML =
+      this.playerPositionToString();
   }
 
   get playerPosition() {
@@ -65,6 +69,11 @@ export default class Player {
   }
 
   initGUI() {
-    this.debug.add(this, 'maxSpeed', { min: 0, max: 50, step: 0.1, label: 'Max Speed' }, 'Player');
+    this.debug.add(
+      this,
+      'maxSpeed',
+      { min: 0, max: 50, step: 0.1, label: 'Max Speed' },
+      'Player'
+    );
   }
 }

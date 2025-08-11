@@ -8,19 +8,23 @@ import DebugGUI from './Utils/DebugGUI';
 import { getThemeConfig } from './Utils/ThemeManager.class';
 
 export default class Game {
-  constructor(canvas, resources) {
+  constructor(canvas, resources, isDebugMode) {
     // Singleton
     if (Game.instance) {
       return Game.instance;
     }
     Game.instance = this;
 
+    this.isDebugMode = isDebugMode;
+
     this.canvas = canvas;
     this.resources = resources;
 
     this.sizes = new Sizes();
     this.time = new Time();
-    this.debug = new DebugGUI();
+    if (this.isDebugMode) {
+      this.debug = new DebugGUI();
+    }
     this.scene = new THREE.Scene();
     this.themeConfig = getThemeConfig('windsweptHills');
     this.cameraInstance = new Camera();

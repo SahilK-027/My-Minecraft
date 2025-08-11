@@ -39,6 +39,7 @@ export default class BlockWorld {
     this.game = Game.getInstance();
     this.scene = this.game.scene;
     this.textureResources = this.game.resources.items;
+    this.isDebugMode = this.game.isDebugMode;
 
     this.debug = DebugGUI.getInstance();
     this.quality = 'medium';
@@ -47,7 +48,9 @@ export default class BlockWorld {
     this.initTextureAtlas();
     this.initResources();
     this.generateBlockWorld();
-    this.initGUI();
+    if (this.isDebugMode) {
+      this.initGUI();
+    }
   }
 
   initTextureAtlas() {
@@ -148,7 +151,9 @@ export default class BlockWorld {
     }
 
     // Debug: show atlas
-    this.atlas.debugAtlas();
+    if (this.isDebugMode) {
+      this.atlas.debugAtlas();
+    }
 
     console.log(
       'Texture atlas created with',

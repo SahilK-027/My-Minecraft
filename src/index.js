@@ -6,6 +6,14 @@ const progressBar = document.getElementById('bar');
 const progress = document.getElementById('progress');
 const resources = new ResourceLoader(ASSETS);
 
+// true only when URL has ?mode=debug
+export const isDebugMode =
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('mode') === 'debug';
+
+// Easy toggle for local dev >_<
+// export const isDebugMode = true;
+
 resources.on('progress', ({ id, itemsLoaded, itemsTotal, percent }) => {
   progressBar.style.width = `${percent.toFixed(1)}%`;
   console.log(
@@ -28,7 +36,7 @@ resources.on('loaded', () => {
     console.log('☑️ No asset to load. Initializing game…!');
   }
 
-  new Game(document.getElementById('three'), resources);
+  new Game(document.getElementById('three'), resources, isDebugMode);
   progressBar.style.display = 'none';
   progress.style.display = 'none';
 });

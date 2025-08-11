@@ -9,9 +9,12 @@ export default class Lighting {
     this.resources = this.game.resources;
     this.helperEnabled = helperEnabled;
     this.debug = DebugGUI.getInstance();
+    this.isDebugMode = this.game.isDebugMode;
 
     this.setThreePointLights();
-    this.initGUI();
+    if (this.isDebugMode) {
+      this.initGUI();
+    }
   }
 
   setThreePointLights() {

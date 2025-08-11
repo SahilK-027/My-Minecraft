@@ -1,5 +1,6 @@
 import GUI from 'lil-gui';
 import * as THREE from 'three';
+import { isDebugMode } from '../..';
 
 /**
  * DebugGUI: A wrapper around lil-gui that auto-detects control types and supports:
@@ -36,6 +37,9 @@ import * as THREE from 'three';
  */
 export default class DebugGUI {
   constructor() {
+    if (!isDebugMode) {
+      return;
+    }
     // Singleton pattern - return existing instance if it exists
     if (DebugGUI.instance) {
       return DebugGUI.instance;
@@ -77,7 +81,11 @@ export default class DebugGUI {
     // Vector2 / Vector3: grouped axis sliders
     if (value instanceof THREE.Vector2 || value instanceof THREE.Vector3) {
       const vecFolder = controllerTarget.addFolder(label);
-      const axes = ['x', 'y', value instanceof THREE.Vector3 ? 'z' : null].filter(Boolean);
+      const axes = [
+        'x',
+        'y',
+        value instanceof THREE.Vector3 ? 'z' : null,
+      ].filter(Boolean);
 
       axes.forEach((axis) => {
         const controller = vecFolder
@@ -107,9 +115,7 @@ export default class DebugGUI {
 
     // Plain object vector case: {x,y} or {x,y,z}
     const isPlainVec =
-      value &&
-      typeof value === 'object' &&
-      ('x' in value && 'y' in value);
+      value && typeof value === 'object' && 'x' in value && 'y' in value;
 
     if (isPlainVec) {
       const vecFolder = controllerTarget.addFolder(label);

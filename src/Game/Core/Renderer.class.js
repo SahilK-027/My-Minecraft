@@ -9,16 +9,20 @@ export default class Renderer {
     this.sizes = this.game.sizes;
     this.scene = this.game.scene;
     this.camera = this.game.camera;
+    this.isDebugMode = this.game.isDebugMode;
 
     this.renderer = this.game.renderer;
     this.debug = this.game.debug;
     this.themeConfig = this.game.themeConfig;
 
     this.setRendererInstance();
+    if (this.isDebugMode) {
+      this.initGUI();
+    }
   }
 
   setRendererInstance() {
-    const toneMappingOptions = {
+    this.toneMappingOptions = {
       NoToneMapping: THREE.NoToneMapping,
       LinearToneMapping: THREE.LinearToneMapping,
       ReinhardToneMapping: THREE.ReinhardToneMapping,
@@ -34,18 +38,6 @@ export default class Renderer {
     });
 
     this.rendererInstance.toneMapping = THREE.ACESFilmicToneMapping;
-    this.debug.add(
-      this.rendererInstance,
-      'toneMapping',
-      {
-        options: toneMappingOptions,
-        label: 'Tone Mapping',
-        onChange: (toneMappingType) => {
-          this.rendererInstance.toneMapping = toneMappingType;
-        },
-      },
-      'Renderer Settings'
-    );
 
     this.rendererInstance.toneMappingExposure = 1.75;
     this.rendererInstance.shadowMap.enabled = true;
@@ -53,8 +45,9 @@ export default class Renderer {
     this.rendererInstance.setSize(this.sizes.width, this.sizes.height);
     this.rendererInstance.setPixelRatio(this.sizes.pixelRatio);
     this.rendererInstance.setClearColor(this.themeConfig.sky_color);
-
-    this.setUpPerformanceMonitor();
+    if (this.isDebugMode) {
+      this.setUpPerformanceMonitor();
+    }
   }
 
   setUpPerformanceMonitor() {
@@ -67,9 +60,28 @@ export default class Renderer {
   }
 
   update() {
-    this.perf.beginFrame();
+    if (this.isDebugMode) {
+      this.perf.beginFrame();
+    }
     const cameraToRender = this.game.camera;
     this.rendererInstance.render(this.scene, cameraToRender);
-    this.perf.endFrame();
+    if (this.isDebugMode) {
+      this.perf.endFrame();
+    }
+  }
+
+  initGUI() {
+    this.debug.add(
+      this.rendererInstance,
+      'toneMapping',
+      {
+        options: this.toneMappingOptions,
+        label: 'Tone Mapping',
+        onChange: (toneMappingType) => {
+          this.rendererInstance.toneMapping = toneMappingType;
+        },
+      },
+      'Renderer Settings'
+    );
   }
 }
