@@ -7,7 +7,7 @@ In-browser Minecraft-style sandbox game. Dig, build, and explore right from your
 
 ## 🚀 Live
 
-👉🏻 https://infinite-procedural-minecraft.vercel.app
+👉🏻 https://minecraft-sahilk.vercel.app/
 
 ## 🛠 Built With
 
