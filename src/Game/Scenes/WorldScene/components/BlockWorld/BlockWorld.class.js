@@ -219,7 +219,10 @@ export default class BlockWorld {
          * behaviour if you later change inBounds.
          */
         for (let y = 0; y <= WORLD_CONFIG.height; y++) {
-          if (y < height && this.getBlock(x, y, z).id === blocks.empty.id) {
+          const cell = this.getBlock(x, y, z);
+          const currentId = cell ? cell.id : blocks.empty.id;
+
+          if (y < height && currentId === blocks.empty.id) {
             // fill interior with dirt only if it wasn't already set by resources
             this.setBlockId(x, y, z, blocks.dirt.id);
           } else if (y === height) {
@@ -383,7 +386,7 @@ export default class BlockWorld {
       y >= 0 &&
       y < WORLD_CONFIG.height &&
       z >= 0 &&
-      z < WORLD_CONFIG.width
+      z < WORLD_CONFIG.depth
     ) {
       return true;
     } else {
