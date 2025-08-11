@@ -43,13 +43,6 @@ export default class BlockWorld {
     this.scene = this.game.scene;
     this.textureResources = this.game.resources.items;
 
-    // Ensure textures are using sRGB color space for correct color rendering.
-    Object.values(this.textureResources).forEach((res) => {
-      if (res instanceof THREE.Texture) {
-        res.colorSpace = THREE.SRGBColorSpace;
-      }
-    });
-
     this.debug = DebugGUI.getInstance();
     this.data = data;
     this.quality = 'medium';
@@ -150,7 +143,6 @@ export default class BlockWorld {
     } else {
       this.atlasTexture.encoding = THREE.sRGBEncoding;
     }
-    this.atlasTexture.flipY = true;
 
     // Debug: show atlas
     this.atlas.debugAtlas();

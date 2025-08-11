@@ -106,10 +106,6 @@ export class TextureAtlas {
     return Array.from(this.textureMap.keys());
   }
 
-  /**
-   * Create face UVs. Uses the atlas flipY convention: atlasTexture.flipY === false
-   * If you ever toggle flipY, update this function to match.
-   */
   createFaceUVs(uvData) {
     const { minU, maxU, minV, maxV } = uvData;
     // vertex order assumed: bottom-left, bottom-right, top-right, top-left
