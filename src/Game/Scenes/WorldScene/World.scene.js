@@ -1,5 +1,4 @@
 import Game from '../../Game.class';
-import DebugFloor from './components/DebugFloor/DebugFloor.class';
 import Lighting from './components/Lighting/Lighting.class';
 import BlockWorld from './components/BlockWorld/BlockWorld.class';
 import Player from '../../Entities/Player.class';
@@ -14,12 +13,9 @@ export default class World {
       this.game.cameraInstance.FPPCamera,
       this.game.cameraInstance.FPPControls
     );
-    this.debugFloor = new DebugFloor();
 
     this.lighting = new Lighting({ helperEnabled: false });
   }
 
-  update(delta) {
-    this.player.applyInputs(delta);
-  }
+  update() {}
 }

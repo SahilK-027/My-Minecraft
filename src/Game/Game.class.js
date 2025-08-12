@@ -6,6 +6,7 @@ import Renderer from './Core/Renderer.class';
 import World from './Scenes/WorldScene/World.scene';
 import DebugGUI from './Utils/DebugGUI';
 import { getThemeConfig } from './Utils/ThemeManager.class';
+import PhysicsSystem from './Systems/PhysicsSystem.class';
 
 export default class Game {
   constructor(canvas, resources, isDebugMode) {
@@ -30,6 +31,7 @@ export default class Game {
     this.cameraInstance = new Camera();
     this.world = new World();
     this.player = this.world.player;
+    this.physics = new PhysicsSystem();
     this.camera = this.cameraInstance.orbitCamera;
     this.renderer = new Renderer();
 
@@ -60,7 +62,8 @@ export default class Game {
         : this.cameraInstance.orbitCamera;
     }
     this.cameraInstance.update();
-    this.world.update(delta);
+    this.world.update();
+    this.physics.update(delta, this.player, this.world.blockWorld);
     this.renderer.update();
   }
 

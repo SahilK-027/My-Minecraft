@@ -43,7 +43,7 @@ export default class BlockWorld {
 
     this.debug = DebugGUI.getInstance();
     this.quality = 'medium';
-    this.currentSeason = 'winter';
+    this.currentSeason = 'summer';
 
     this.initTextureAtlas();
     this.initResources();
@@ -283,8 +283,6 @@ export default class BlockWorld {
     }
 
     const { width, height, depth } = WORLD_CONFIG;
-    const halfW = width / 2;
-    const halfD = depth / 2;
 
     this.worldGroup = new THREE.Group();
 
@@ -327,7 +325,7 @@ export default class BlockWorld {
           const mesh = meshes.get(id);
           if (!mesh) continue;
 
-          matrix.makeTranslation(x - halfW + 0.5, y, z - halfD + 0.5);
+          matrix.makeTranslation(x, y, z);
           mesh.setMatrixAt(mesh.count, matrix);
           this.setBlockInstanceId(x, y, z, mesh.count);
           mesh.count++;

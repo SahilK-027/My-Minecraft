@@ -6,7 +6,8 @@
 - [x] FPP camera — First-person perspective camera controls
 - [x] Texture atlas — Efficient texture management for blocks
 - [x] Enable debug based on URL params — Dev mode toggle
-- [ ] Physics system — Basic collision and movement physics
+- [x] Physics system — Basic collision and movement physics
+- [ ] TPP camera - Third-person perspective camera controls
 - [ ] Infinite world — Chunk streaming and unloading
 - [ ] Terraforming — Modify terrain in real-time
 - [ ] Trees — Procedural tree generation

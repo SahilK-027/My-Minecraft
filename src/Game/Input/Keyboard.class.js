@@ -7,7 +7,12 @@ export default class KeyboardControls {
    *  - damping: number (optional) — larger = snappier (time constant for exponential smoothing)
    *  - deadzone: number (optional) — values smaller than this get snapped to zero
    */
-  constructor({ controls = null, resetCallback = null, damping = 10, deadzone = 1e-3 } = {}) {
+  constructor({
+    controls = null,
+    resetCallback = null,
+    damping = 10,
+    deadzone = 1e-3,
+  } = {}) {
     this.controls = controls;
     this.resetCallback = resetCallback;
 
@@ -20,6 +25,8 @@ export default class KeyboardControls {
     // smoothing parameter (time constant). Use update(delta) to apply smoothing.
     this.damping = damping;
     this.deadzone = deadzone;
+
+    this.jumpPressed = false;
 
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
@@ -51,6 +58,10 @@ export default class KeyboardControls {
           this.resetCallback();
         }
         break;
+      case 'Space':
+        this.jumpPressed = true;
+        break;
+
       default:
         break;
     }
@@ -69,6 +80,12 @@ export default class KeyboardControls {
       default:
         break;
     }
+  }
+
+  consumeJump() {
+    const j = this.jumpPressed;
+    this.jumpPressed = false;
+    return j;
   }
 
   /**
@@ -91,8 +108,8 @@ export default class KeyboardControls {
   }
 
   dispose() {
-    document.removeEventListener('keydown', this._onKeyDown);
-    document.removeEventListener('keyup', this._onKeyUp);
+    document.removeEventListener('keydown', this.onKeyDown);
+    document.removeEventListener('keyup', this.onKeyUp);
     this.controls = null;
     this.resetCallback = null;
   }
