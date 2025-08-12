@@ -12,5 +12,6 @@
 - [ ] Trees — Procedural tree generation
 - [ ] Bushes — Small vegetation details
 - [ ] TPP camera - Third-person perspective camera controls
+- [ ] Full screen toggle - Upon game start go to full screen
 - [ ] Seasons and Weather — Dynamic environmental changes
 - [ ] Basic interface for HUD, menus, and debug info
