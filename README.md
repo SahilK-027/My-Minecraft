@@ -1,4 +1,4 @@
-# 🪵 Infinite Procedural Minecraft
+# 🪵 My Minecraft
 
 In-browser Minecraft-style sandbox game. Dig, build, and explore right from your browser!
 
