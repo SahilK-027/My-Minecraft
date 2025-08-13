@@ -61,7 +61,7 @@ export default class BlockWorld {
 
     this.debug = DebugGUI.getInstance();
     this.quality = 'medium';
-    this.currentSeason = 'winter';
+    this.currentSeason = 'summer';
 
     this.seasonGrass = GRASS_SEASONS_CONFIG[this.currentSeason];
 
