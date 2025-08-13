@@ -7,9 +7,9 @@ export const blocks = {
     id: 1,
     name: 'grass',
   },
-  snow: {
+  grassVariation: {
     id: 2,
-    name: 'snow',
+    name: 'grassVariation',
   },
   dirt: {
     id: 3,

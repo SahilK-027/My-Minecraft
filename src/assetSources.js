@@ -10,13 +10,33 @@ const ASSETS = [
     type: 'texture',
   },
   {
-    id: 'snowTexture',
-    path: ['/assets/textures/blocks/snow/snow.png'],
+    id: 'grassVariationTexture',
+    path: ['/assets/textures/blocks/grass/grass_variation.png'],
     type: 'texture',
   },
   {
-    id: 'snowSideTexture',
-    path: ['/assets/textures/blocks/snow/snow_side.png'],
+    id: 'winterGrassTexture',
+    path: ['/assets/textures/blocks/grass/winter_grass.png'],
+    type: 'texture',
+  },
+  {
+    id: 'winterGrassSideTexture',
+    path: ['/assets/textures/blocks/grass/winter_grass_side.png'],
+    type: 'texture',
+  },
+  {
+    id: 'autumnGrassTexture',
+    path: ['/assets/textures/blocks/grass/autumn_grass.png'],
+    type: 'texture',
+  },
+  {
+    id: 'autumnGrassSideTexture',
+    path: ['/assets/textures/blocks/grass/autumn_grass_side.png'],
+    type: 'texture',
+  },
+  {
+    id: 'autumnGrassVariationTexture',
+    path: ['/assets/textures/blocks/grass/autumn_grass_variation.png'],
     type: 'texture',
   },
   {

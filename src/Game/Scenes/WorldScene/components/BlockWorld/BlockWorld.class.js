@@ -34,6 +34,24 @@ const QUALITY_MAP = {
   high: 'standard',
 };
 
+const GRASS_SEASONS_CONFIG = {
+  summer: {
+    variationThreshold: 0.8,
+    variationHeight: WORLD_CONFIG.height * WORLD_PARAMS.terrain.offset,
+    variationTexture: 'grassVariation',
+  },
+  autumn: {
+    variationThreshold: 0.8,
+    variationHeight: WORLD_CONFIG.height * WORLD_PARAMS.terrain.offset,
+    variationTexture: 'autumnGrassVariation',
+  },
+  winter: {
+    variationThreshold: 0.0,
+    variationHeight: 0.0,
+    variationTexture: 'winterGrass',
+  },
+};
+
 export default class BlockWorld {
   constructor() {
     this.game = Game.getInstance();
@@ -43,7 +61,9 @@ export default class BlockWorld {
 
     this.debug = DebugGUI.getInstance();
     this.quality = 'medium';
-    this.currentSeason = 'summer';
+    this.currentSeason = 'winter';
+
+    this.seasonGrass = GRASS_SEASONS_CONFIG[this.currentSeason];
 
     this.initTextureAtlas();
     this.initResources();
@@ -70,14 +90,14 @@ export default class BlockWorld {
           left: 'grassSide',
         },
       },
-      [blocks.snow.id]: {
+      [blocks.grassVariation.id]: {
         faces: {
-          front: 'snowSide',
-          back: 'snowSide',
-          top: 'snowTop',
+          front: 'grassSide',
+          back: 'grassSide',
+          top: `${this.seasonGrass.variationTexture}`,
           bottom: 'dirt',
-          right: 'snowSide',
-          left: 'snowSide',
+          right: 'grassSide',
+          left: 'grassSide',
         },
       },
       [blocks.dirt.id]: {
@@ -132,10 +152,27 @@ export default class BlockWorld {
       },
     };
 
-    this.atlas.addTexture('grassTop', this.textureResources.grassTexture);
-    this.atlas.addTexture('grassSide', this.textureResources.grassSideTexture);
-    this.atlas.addTexture('snowTop', this.textureResources.snowTexture);
-    this.atlas.addTexture('snowSide', this.textureResources.snowSideTexture);
+    let grassTextureTopToRender, grassTextureSideToRender;
+    switch (this.currentSeason) {
+      case 'summer':
+        grassTextureTopToRender = this.textureResources.grassTexture;
+        grassTextureSideToRender = this.textureResources.grassSideTexture;
+        break;
+      case 'winter':
+        grassTextureTopToRender = this.textureResources.winterGrassTexture;
+        grassTextureSideToRender = this.textureResources.winterGrassSideTexture;
+        break;
+      case 'autumn':
+        grassTextureTopToRender = this.textureResources.autumnGrassTexture;
+        grassTextureSideToRender = this.textureResources.autumnGrassSideTexture;
+    }
+
+    this.atlas.addTexture('grassTop', grassTextureTopToRender);
+    this.atlas.addTexture(
+      this.seasonGrass.variationTexture,
+      this.textureResources[`${this.seasonGrass.variationTexture}Texture`]
+    );
+    this.atlas.addTexture('grassSide', grassTextureSideToRender);
     this.atlas.addTexture('dirt', this.textureResources.dirtTexture);
     this.atlas.addTexture('stone', this.textureResources.stoneTexture);
     this.atlas.addTexture('coalOre', this.textureResources.coalOreTexture);
@@ -250,12 +287,19 @@ export default class BlockWorld {
             // fill interior with dirt only if it wasn't already set by resources
             this.setBlockId(x, y, z, blocks.dirt.id);
           } else if (y === height) {
-            // the top-most voxel becomes grass
-            if (this.currentSeason === 'winter') {
-              this.setBlockId(x, y, z, blocks.snow.id);
-            } else {
-              this.setBlockId(x, y, z, blocks.grass.id);
-            }
+            // On surface grass
+            const useVariation =
+              Math.random() > this.seasonGrass.variationThreshold &&
+              y > this.seasonGrass.variationHeight;
+
+            console.log(useVariation);
+
+            this.setBlockId(
+              x,
+              y,
+              z,
+              useVariation ? blocks.grassVariation.id : blocks.grass.id
+            );
           } else if (y > height) {
             // above the surface remains empty
             this.setBlockId(x, y, z, blocks.empty.id);
@@ -437,6 +481,28 @@ export default class BlockWorld {
     }
   }
 
+  onSeasonChange(newSeason) {
+    if (this.currentSeason === newSeason) return;
+
+    console.log(`Season change: ${this.currentSeason} → ${newSeason}`);
+
+    try {
+      this.currentSeason = newSeason;
+      this.seasonGrass = GRASS_SEASONS_CONFIG[this.currentSeason];
+
+      // Recreate atlas, materials and block geometries so textures/UVs reflect new season
+      this.initTextureAtlas();
+      this.initResources();
+
+      // Rebuild the world meshes (old meshes will be disposed by generateMeshInstances)
+      this.generateBlockWorld();
+
+      console.log(`Season change complete: ${newSeason}`);
+    } catch (error) {
+      console.error('Error during season change:', error);
+    }
+  }
+
   initGUI() {
     this.debug.add(
       WORLD_CONFIG,
@@ -586,6 +652,27 @@ export default class BlockWorld {
         },
       },
       'Graphics Settings'
+    );
+
+    const seasonControl = {
+      season: this.currentSeason,
+    };
+
+    this.debug.add(
+      seasonControl,
+      'season',
+      {
+        options: {
+          Summer: 'summer',
+          Autumn: 'autumn',
+          Winter: 'winter',
+        },
+        label: 'Season',
+        onChange: (s) => {
+          this.onSeasonChange(s);
+        },
+      },
+      'Seasons Settings'
     );
   }
 }
