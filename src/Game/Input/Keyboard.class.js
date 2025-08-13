@@ -16,29 +16,22 @@ export default class KeyboardControls {
     this.deadzone = deadzone;
 
     this.jumpPressed = false;
+    this.sprintPressed = false;
 
-    // bind handlers so we can remove them on dispose
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
-    this._onWindowBlur = this._onWindowBlur.bind(this);
-    this._onVisibilityChange = this._onVisibilityChange.bind(this);
 
-    document.addEventListener('keydown', this.onKeyDown);
-    document.addEventListener('keyup', this.onKeyUp);
+    this._listenersAttached = false;
 
-    // Reset inputs when page hidden or window blurred to avoid stuck state
-    window.addEventListener('blur', this._onWindowBlur);
-    document.addEventListener('visibilitychange', this._onVisibilityChange);
+    this.resume();
   }
 
   onKeyDown(event) {
-    // Only attempt pointer lock if the document/window is focused.
-    // Some browsers block pointerLock requests when focus/visibility isn't right.
     if (this.controls && !this.controls.isLocked && document.hasFocus()) {
       try {
         this.controls.lock();
       } catch (e) {
-        // ignore - request may be blocked by browser policy
+        console.warn(e);
       }
     }
 
@@ -63,6 +56,10 @@ export default class KeyboardControls {
       case 'Space':
         this.jumpPressed = true;
         break;
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        this.sprintPressed = true;
+        break;
       default:
         break;
     }
@@ -78,6 +75,9 @@ export default class KeyboardControls {
       case 'KeyS':
         this.target.z = 0;
         break;
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        this.sprintPressed = false;
       default:
         break;
     }
@@ -100,31 +100,29 @@ export default class KeyboardControls {
     if (Math.abs(this.input.z) < this.deadzone) this.input.z = 0;
   }
 
-  /**
-   * Reset input state (useful on blur/visibilitychange).
-   */
-  resetInput() {
-    this.target.set(0, 0, 0);
+  pause() {
+    if (!this._listenersAttached) return;
+    document.removeEventListener('keydown', this.onKeyDown);
+    document.removeEventListener('keyup', this.onKeyUp);
+    this._listenersAttached = false;
+
     this.input.set(0, 0, 0);
+    this.target.set(0, 0, 0);
     this.jumpPressed = false;
+    this.sprintPressed = false;
   }
 
-  _onWindowBlur() {
-    // clear input so a stuck keyup (that we missed) doesn't hang movement
-    this.resetInput();
-  }
-
-  _onVisibilityChange() {
-    if (document.hidden) {
-      this.resetInput();
-    }
+  resume() {
+    if (this._listenersAttached) return;
+    document.addEventListener('keydown', this.onKeyDown);
+    document.addEventListener('keyup', this.onKeyUp);
+    this._listenersAttached = true;
   }
 
   dispose() {
     document.removeEventListener('keydown', this.onKeyDown);
     document.removeEventListener('keyup', this.onKeyUp);
-    window.removeEventListener('blur', this._onWindowBlur);
-    document.removeEventListener('visibilitychange', this._onVisibilityChange);
+
     this.controls = null;
     this.resetCallback = null;
   }

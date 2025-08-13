@@ -141,9 +141,23 @@ export default class Game {
       } catch (e) {}
     }
 
+    // Pause player + keyboard
+    if (
+      this.player &&
+      this.player.controls &&
+      typeof this.player.controls.pause === 'function'
+    ) {
+      try {
+        this.player.pause();
+        console.log('Paused Player + KeyboardControls');
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
     this.suppressNextFrame = true;
 
-    if (this.isDebugMode) console.log('Game paused (visibility/focus change).');
+    console.log('Game paused (visibility/focus change).');
   }
 
   resume() {
@@ -180,11 +194,24 @@ export default class Game {
       }
     }
 
+    // Resume player + keyboard
+    if (
+      this.player &&
+      this.player.controls &&
+      typeof this.player.controls.resume === 'function'
+    ) {
+      try {
+        this.player.resume();
+        console.log('Resumed Player + KeyboardControls');
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
     this.isPaused = false;
     this.suppressNextFrame = true;
 
-    if (this.isDebugMode)
-      console.log('Game resumed (visibility/focus change).');
+    console.log('Game resumed (visibility/focus change).');
   }
 
   _onVisibilityChange() {
