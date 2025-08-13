@@ -292,8 +292,6 @@ export default class BlockWorld {
               Math.random() > this.seasonGrass.variationThreshold &&
               y > this.seasonGrass.variationHeight;
 
-            console.log(useVariation);
-
             this.setBlockId(
               x,
               y,

@@ -11,6 +11,8 @@ export default class Renderer {
     this.camera = this.game.camera;
     this.isDebugMode = this.game.isDebugMode;
 
+    this.isPaused = false;
+
     this.renderer = this.game.renderer;
     this.debug = this.game.debug;
     this.themeConfig = this.game.themeConfig;
@@ -59,7 +61,19 @@ export default class Renderer {
     this.rendererInstance.setPixelRatio(this.sizes.pixelRatio);
   }
 
+  pause() {
+    if (this.isPaused) return;
+    this.isPaused = true;
+  }
+
+  resume() {
+    if (!this.isPaused) return;
+    this.isPaused = false;
+  }
+
   update() {
+    if (this.isPaused) return;
+
     if (this.isDebugMode) {
       this.perf.beginFrame();
     }

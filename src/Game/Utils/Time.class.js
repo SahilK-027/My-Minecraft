@@ -1,29 +1,71 @@
 import EventEmitter from './EventEmitter.class';
 
 export default class Time extends EventEmitter {
-  constructor() {
+  constructor(autoStart = false) {
     super();
 
-    this.start = Date.now();
+    this.start = performance.now();
     this.current = this.start;
     this.elapsedTime = 0;
-    this.delta = 34;
+    this.delta = 0;
 
-    window.requestAnimationFrame(() => {
-      this.animate();
-    });
+    this.isPaused = true;
+    this.rafId = null;
+
+    this.animate = this.animate.bind(this);
+
+    if (autoStart) {
+      this.startLoop();
+    }
   }
 
-  animate() {
-    const currentTime = Date.now();
+  startLoop() {
+    if (!this.isPaused) return;
+    this.isPaused = false;
+
+    this.current = performance.now();
+    this.rafId = window.requestAnimationFrame(this.animate);
+  }
+
+  stopLoop() {
+    if (this.rafId != null) {
+      window.cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    this.isPaused = true;
+    this.delta = 0;
+  }
+
+  pause() {
+    if (this.isPaused) return;
+    this.stopLoop();
+  }
+
+  resume() {
+    if (!this.isPaused) return;
+    this.startLoop();
+  }
+
+  animate(timestamp) {
+    if (this.isPaused) return;
+
+    const currentTime =
+      typeof timestamp === 'number' ? timestamp : performance.now();
+
     this.delta = (currentTime - this.current) / 1000;
+    this.delta = Math.min(this.delta, 0.1);
+
     this.current = currentTime;
     this.elapsedTime = (this.current - this.start) / 1000;
 
-    this.trigger('animate');
+    try {
+      this.trigger('animate');
+    } catch (err) {
+      console.warn('Error in animate handler:', err);
+    }
 
-    window.requestAnimationFrame(() => {
-      this.animate();
-    });
+    if (!this.isPaused) {
+      this.rafId = window.requestAnimationFrame(this.animate);
+    }
   }
 }

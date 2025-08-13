@@ -1,12 +1,5 @@
 import * as THREE from 'three';
 export default class KeyboardControls {
-  /**
-   * options:
-   *  - controls: PointerLockControls (optional) — used to lock on first key press
-   *  - resetCallback: function (optional) — called when 'KeyR' is pressed
-   *  - damping: number (optional) — larger = snappier (time constant for exponential smoothing)
-   *  - deadzone: number (optional) — values smaller than this get snapped to zero
-   */
   constructor({
     controls = null,
     resetCallback = null,
@@ -16,28 +9,37 @@ export default class KeyboardControls {
     this.controls = controls;
     this.resetCallback = resetCallback;
 
-    // `input` is the smoothed value used by the rest of code.
     this.input = new THREE.Vector3(0, 0, 0);
-
-    // `target` is set immediately on key down/up and the input eases toward it.
     this.target = new THREE.Vector3(0, 0, 0);
 
-    // smoothing parameter (time constant). Use update(delta) to apply smoothing.
     this.damping = damping;
     this.deadzone = deadzone;
 
     this.jumpPressed = false;
 
+    // bind handlers so we can remove them on dispose
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
+    this._onWindowBlur = this._onWindowBlur.bind(this);
+    this._onVisibilityChange = this._onVisibilityChange.bind(this);
 
     document.addEventListener('keydown', this.onKeyDown);
     document.addEventListener('keyup', this.onKeyUp);
+
+    // Reset inputs when page hidden or window blurred to avoid stuck state
+    window.addEventListener('blur', this._onWindowBlur);
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
   }
 
   onKeyDown(event) {
-    if (this.controls && !this.controls.isLocked) {
-      this.controls.lock();
+    // Only attempt pointer lock if the document/window is focused.
+    // Some browsers block pointerLock requests when focus/visibility isn't right.
+    if (this.controls && !this.controls.isLocked && document.hasFocus()) {
+      try {
+        this.controls.lock();
+      } catch (e) {
+        // ignore - request may be blocked by browser policy
+      }
     }
 
     switch (event.code) {
@@ -61,7 +63,6 @@ export default class KeyboardControls {
       case 'Space':
         this.jumpPressed = true;
         break;
-
       default:
         break;
     }
@@ -88,28 +89,42 @@ export default class KeyboardControls {
     return j;
   }
 
-  /**
-   * Call each frame with the frame time in seconds.
-   * Example: keyboardControls.update(deltaSeconds)
-   */
   update(delta) {
     if (delta <= 0) return;
 
-    // Exponential smoothing: alpha = 1 - exp(-damping * dt)
     const alpha = 1 - Math.exp(-this.damping * delta);
-
-    // Smooth each axis (Vector3.lerp uses alpha in [0,1])
     this.input.lerp(this.target, alpha);
 
-    // Snap nearly-zero values to zero to avoid tiny lingering values
     if (Math.abs(this.input.x) < this.deadzone) this.input.x = 0;
     if (Math.abs(this.input.y) < this.deadzone) this.input.y = 0;
     if (Math.abs(this.input.z) < this.deadzone) this.input.z = 0;
   }
 
+  /**
+   * Reset input state (useful on blur/visibilitychange).
+   */
+  resetInput() {
+    this.target.set(0, 0, 0);
+    this.input.set(0, 0, 0);
+    this.jumpPressed = false;
+  }
+
+  _onWindowBlur() {
+    // clear input so a stuck keyup (that we missed) doesn't hang movement
+    this.resetInput();
+  }
+
+  _onVisibilityChange() {
+    if (document.hidden) {
+      this.resetInput();
+    }
+  }
+
   dispose() {
     document.removeEventListener('keydown', this.onKeyDown);
     document.removeEventListener('keyup', this.onKeyUp);
+    window.removeEventListener('blur', this._onWindowBlur);
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
     this.controls = null;
     this.resetCallback = null;
   }

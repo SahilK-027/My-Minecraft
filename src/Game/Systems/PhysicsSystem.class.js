@@ -13,6 +13,8 @@ export default class PhysicsSystem {
     this.scene = this.game.scene;
     this.isDebugMode = this.game.isDebugMode;
 
+    this.isPaused = false;
+
     if (this.isDebugMode) {
       this.createCollisionHelperBlocksPool(this.helperPoolSize);
     }
@@ -40,8 +42,33 @@ export default class PhysicsSystem {
     this.helperBlocks.add(mesh);
   }
 
+  pause() {
+    if (this.isPaused) return;
+    this.isPaused = true;
+
+    this.accumulator = 0;
+
+    if (this.isDebugMode && this.helperBlocks) {
+      this.helperBlocks.visible = false;
+    }
+  }
+
+  resume() {
+    if (!this.isPaused) return;
+    this.isPaused = false;
+
+    this.accumulator = 0;
+
+    if (this.isDebugMode && this.helperBlocks) {
+      this.helperBlocks.visible = true;
+    }
+  }
+
   update(delta, player, world) {
+    if (this.isPaused) return;
+
     this.accumulator += delta;
+
     while (this.accumulator >= this.timeStep) {
       if (this.helperBlocks) {
         this.helperBlocks.clear();
@@ -50,7 +77,6 @@ export default class PhysicsSystem {
       if (!player.onGround) {
         player.velocity.y -= this.gravity * this.timeStep;
       } else {
-        // avoid small negative velocities from previous frames
         if (player.velocity.y < 0) player.velocity.y = 0;
       }
 
