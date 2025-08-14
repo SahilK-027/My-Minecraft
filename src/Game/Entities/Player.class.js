@@ -140,18 +140,6 @@ export default class Player {
     const coordsEl = document.getElementById('coordinates');
     if (coordsEl) {
       coordsEl.innerHTML = this.playerPositionToString();
-      if (this.isDebugMode) {
-        const sprintState = this.#isInCooldown
-          ? `COOLDOWN (${this.#cooldownTimer.toFixed(2)} / ${
-              this.sprintCooldownDuration
-            }s)`
-          : this.keyboard.sprintPressed
-          ? `SPRINT (${this.#sprintTimer.toFixed(2)} / ${
-              this.sprintMaxDuration
-            }s)`
-          : 'NORMAL';
-        coordsEl.innerHTML += `<br/>Sprint: ${sprintState}`;
-      }
     }
 
     this._updateSprintUI();
