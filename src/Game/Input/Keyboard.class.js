@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import Game from '../Game.class';
 export default class KeyboardControls {
   constructor({
     controls = null,
@@ -6,6 +7,9 @@ export default class KeyboardControls {
     damping = 10,
     deadzone = 1e-3,
   } = {}) {
+    this.game = Game.getInstance();
+    this.isDebugMode = this.game.isDebugMode;
+
     this.controls = controls;
     this.resetCallback = resetCallback;
 
@@ -27,6 +31,10 @@ export default class KeyboardControls {
   }
 
   onKeyDown(event) {
+    if(this.isDebugMode) {
+      this.controls.lock();
+    }
+
     switch (event.code) {
       case 'KeyA':
         this.target.x = -1;
