@@ -7,6 +7,7 @@ export default class PhysicsSystem {
   simulationRate = 200;
   timeStep = 1 / this.simulationRate;
   accumulator = 0;
+  EPSILON = 1e-4;
 
   constructor() {
     this.game = Game.getInstance();
@@ -16,11 +17,11 @@ export default class PhysicsSystem {
     this.isPaused = false;
 
     if (this.isDebugMode) {
-      this.createCollisionHelperBlocksPool(this.helperPoolSize);
+      this.createCollisionHelperBlocks(this.helperPoolSize);
     }
   }
 
-  createCollisionHelperBlocksPool() {
+  createCollisionHelperBlocks() {
     this.collisionHelperMaterial = new THREE.MeshBasicMaterial({
       color: 'purple',
       transparent: true,
@@ -175,10 +176,9 @@ export default class PhysicsSystem {
         const overlapXZ = player.radius - Math.sqrt(dx * dx + dz * dz);
 
         let normal, overlap;
-        if (overlapY < overlapXZ) {
+        if (overlapY + this.EPSILON < overlapXZ) {
           normal = new THREE.Vector3(0, -Math.sign(dy), 0);
           overlap = overlapY;
-          player.onGround = true;
         } else {
           normal = new THREE.Vector3(-dx, 0, -dz).normalize();
           overlap = overlapXZ;
@@ -197,22 +197,33 @@ export default class PhysicsSystem {
   }
 
   resolveCollisions(collisions, player) {
-    collisions.sort((a, b) => a.overlap < b.overlap);
+    // Resolve collisions in order of largest overlap to smallest
+    collisions.sort((a, b) => b.overlap - a.overlap);
 
     for (const collision of collisions) {
       if (!this.pointInPlayerBoundingCylinder(collision.contactPoint, player)) {
         continue;
       }
-      let deltaPosition = collision.normal.clone();
-      deltaPosition.multiplyScalar(collision.overlap);
+
+      const deltaPosition = collision.normal
+        .clone()
+        .multiplyScalar(collision.overlap + this.EPSILON);
       player.playerPosition.add(deltaPosition);
 
-      let magnitude = player.worldVelocity.dot(collision.normal);
-      let velocityAdjustment = collision.normal
-        .clone()
-        .multiplyScalar(magnitude);
+      const normal = collision.normal.clone().normalize();
+      const worldVel = player.worldVelocity.clone();
 
-      player.applyWorldDeltaVelocity(velocityAdjustment.negate());
+      const velAlongNormal = worldVel.dot(normal);
+
+      if (velAlongNormal < 0) {
+        const correctionWorld = normal.clone().multiplyScalar(-velAlongNormal);
+        player.applyWorldDeltaVelocity(correctionWorld);
+      }
+
+      if (normal.y > 0.5) {
+        player.onGround = true;
+        if (player.velocity.y < 0) player.velocity.y = 0;
+      }
     }
   }
 }

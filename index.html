@@ -8,12 +8,28 @@
     <title>Minecraft</title>
   </head>
   <body>
-    <div class="loader">
-      <div id="progress"><div id="bar"></div></div>
+    <div id="loader" class="loader">
+      <div class="loader-content">
+        <div class="loader-logo">MINECRAFT</div>
+        <p style="margin-bottom: 8px; color: #8f7862">by SK</p>
+        <div class="loader-text">Loading World</div>
+        <div id="progress">
+          <div id="bar"></div>
+        </div>
+      </div>
     </div>
+
     <div class="game-overlay">
-      <p>Current location:</p>
-      <p id="coordinates"></p>
+      <p class="cl">Current location:</p>
+      <p id="coordinates">x: 25.00 y: 25.00 z: 25.00</p>
+      <div id="menu">
+        <div class="menu-holder">
+          <img class="logo" src="/assets/logo.png" alt="logo" />
+          <div class="button-container">
+            <button id="playbtn">Start Exploration</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <canvas id="three"></canvas>

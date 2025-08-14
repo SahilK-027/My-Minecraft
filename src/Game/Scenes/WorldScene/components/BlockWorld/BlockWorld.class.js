@@ -229,7 +229,6 @@ export default class BlockWorld {
       for (let y = 0; y < WORLD_CONFIG.height; y++) {
         const row = [];
         for (let z = 0; z < WORLD_CONFIG.depth; z++) {
-          // each cell stores the block id and the instanceId (filled later)
           row.push({
             id: blocks.empty.id,
             instanceId: null,
@@ -275,8 +274,6 @@ export default class BlockWorld {
           WORLD_PARAMS.terrain.offset + WORLD_PARAMS.terrain.magnitude * value;
 
         let height = Math.floor(WORLD_CONFIG.height * scaledNoise);
-
-        // clamp height into valid range
         height = Math.max(0, Math.min(height, WORLD_CONFIG.height - 1));
 
         for (let y = 0; y < WORLD_CONFIG.height; y++) {
@@ -488,11 +485,9 @@ export default class BlockWorld {
       this.currentSeason = newSeason;
       this.seasonGrass = GRASS_SEASONS_CONFIG[this.currentSeason];
 
-      // Recreate atlas, materials and block geometries so textures/UVs reflect new season
       this.initTextureAtlas();
       this.initResources();
 
-      // Rebuild the world meshes (old meshes will be disposed by generateMeshInstances)
       this.generateBlockWorld();
 
       console.log(`Season change complete: ${newSeason}`);

@@ -27,14 +27,6 @@ export default class KeyboardControls {
   }
 
   onKeyDown(event) {
-    if (this.controls && !this.controls.isLocked && document.hasFocus()) {
-      try {
-        this.controls.lock();
-      } catch (e) {
-        console.warn(e);
-      }
-    }
-
     switch (event.code) {
       case 'KeyA':
         this.target.x = -1;
@@ -105,11 +97,6 @@ export default class KeyboardControls {
     document.removeEventListener('keydown', this.onKeyDown);
     document.removeEventListener('keyup', this.onKeyUp);
     this._listenersAttached = false;
-
-    this.input.set(0, 0, 0);
-    this.target.set(0, 0, 0);
-    this.jumpPressed = false;
-    this.sprintPressed = false;
   }
 
   resume() {

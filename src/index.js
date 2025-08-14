@@ -2,6 +2,7 @@ import Game from './Game/Game.class';
 import ResourceLoader from './Game/Utils/ResourceLoader.class';
 import ASSETS from './assetSources.js';
 
+const loader = document.getElementById('loader');
 const progressBar = document.getElementById('bar');
 const progress = document.getElementById('progress');
 const resources = new ResourceLoader(ASSETS);
@@ -37,6 +38,7 @@ resources.on('loaded', () => {
   }
 
   new Game(document.getElementById('three'), resources, isDebugMode);
+  loader.style.display = 'none';
   progressBar.style.display = 'none';
   progress.style.display = 'none';
 });

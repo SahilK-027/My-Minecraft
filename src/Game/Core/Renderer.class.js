@@ -61,16 +61,6 @@ export default class Renderer {
     this.rendererInstance.setPixelRatio(this.sizes.pixelRatio);
   }
 
-  pause() {
-    if (this.isPaused) return;
-    this.isPaused = true;
-  }
-
-  resume() {
-    if (!this.isPaused) return;
-    this.isPaused = false;
-  }
-
   update() {
     if (this.isPaused) return;
 

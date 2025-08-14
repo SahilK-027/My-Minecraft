@@ -4,21 +4,26 @@ import DebugGUI from '../Utils/DebugGUI';
 import KeyboardControls from '../Input/Keyboard.class';
 
 export default class Player {
-  maxSpeed = 6.0;
+  maxSpeed = 3.0;
   radius = 0.5;
   height = 1.75;
   jumpSpeed = 8.5;
   onGround = false;
 
   // sprint system
-  sprintMaxDuration = 5.0; // seconds of continuous sprint allowed (stamina capacity)
-  sprintCooldownDuration = 10.0; // seconds of slowdown after max sprint used
-  cooldownSlowMultiplier = 0.5; // speed multiplier during cooldown (slowed)
-  sprintSpeedMultiplier = 1.2; // sprint speed multiplier while sprinting
-  sprintRecoverRate = 1.0; // how many seconds of used sprint recover per real second when not holding shift
-  #sprintTimer = 0; // counts used sprint time (0..sprintMaxDuration). Higher means less available.
-  #cooldownTimer = 0; // counts cooldown time
+  sprintMaxDuration = 4.0;
+  sprintCooldownDuration = 8.0;
+  cooldownMultiplier = 0.5;
+  sprintSpeedMultiplier = 2.0;
+  sprintRecoverRate = 1.0;
+  #sprintTimer = 0;
+  #cooldownTimer = 0;
   #isInCooldown = false;
+  #lastStaminaTimer = 0;
+  #lastCooldownTimer = 0;
+  #lastActivityTime = 0;
+  #fadeTimeout = 1.0;
+  #isWheelVisible = false;
 
   velocity = new THREE.Vector3();
   #worldVelocity = new THREE.Vector3();
@@ -112,7 +117,7 @@ export default class Player {
       const staminaAvailable =
         this.#sprintTimer < this.sprintMaxDuration - 1e-6;
       if (this.#isInCooldown) {
-        speedMultiplier = this.cooldownSlowMultiplier;
+        speedMultiplier = this.cooldownMultiplier;
       } else if (sprintHeld && staminaAvailable) {
         speedMultiplier = this.sprintSpeedMultiplier;
       }
@@ -202,114 +207,220 @@ export default class Player {
 
   // ---------- Minimal Sprint UI (DOM) ----------
   _createSprintUI() {
-    if (document.getElementById('sprint-ui')) return;
+    if (document.getElementById('stamina-wheel')) return;
 
     const container = document.createElement('div');
-    container.id = 'sprint-ui';
+    container.id = 'stamina-wheel';
     container.style.position = 'fixed';
     container.style.left = '50%';
-    container.style.top = '30%';
+    container.style.top = '35%';
     container.style.transform = 'translate(-50%, -50%)';
-    container.style.width = '220px';
-    container.style.padding = '8px';
-    container.style.background = 'rgba(0,0,0,0.45)';
-    container.style.color = '#fff';
-    container.style.fontFamily = 'sans-serif';
-    container.style.fontSize = '12px';
-    container.style.borderRadius = '6px';
-    container.style.zIndex = 9999;
+    container.style.width = '50px';
+    container.style.height = '50px';
+    container.style.zIndex = 0;
     container.style.userSelect = 'none';
+    container.style.opacity = '0';
+    container.style.transition = 'opacity 0.3s ease-out';
 
-    // label
-    const label = document.createElement('div');
-    label.style.marginBottom = '6px';
-    label.textContent = 'Sprint';
-    container.appendChild(label);
+    // Create SVG element
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '50');
+    svg.setAttribute('height', '50');
+    svg.setAttribute('viewBox', '0 0 120 120');
+    svg.style.filter = 'drop-shadow(rgba(0, 0, 0, 0.2) 0px 2px 1px)';
 
-    // stamina bar background
-    const staminaBg = document.createElement('div');
-    staminaBg.style.width = '100%';
-    staminaBg.style.height = '10px';
-    staminaBg.style.background = 'rgba(255,255,255,0.12)';
-    staminaBg.style.borderRadius = '4px';
-    staminaBg.style.overflow = 'hidden';
-    staminaBg.style.marginBottom = '6px';
+    // Define gradients
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
 
-    const staminaFill = document.createElement('div');
-    staminaFill.id = 'sprint-stamina-fill';
-    staminaFill.style.height = '100%';
-    staminaFill.style.width = '100%'; // full initially
-    staminaFill.style.background = 'linear-gradient(90deg, #8BC34A, #08f364e6)';
-    staminaFill.style.transformOrigin = 'left';
-    staminaFill.style.transition = 'width 0.08s linear';
+    // Blue gradient for stamina
+    const blueGradient = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'linearGradient'
+    );
+    blueGradient.setAttribute('id', 'staminaGradient');
+    blueGradient.setAttribute('x1', '0%');
+    blueGradient.setAttribute('y1', '0%');
+    blueGradient.setAttribute('x2', '100%');
+    blueGradient.setAttribute('y2', '0%');
 
-    staminaBg.appendChild(staminaFill);
-    container.appendChild(staminaBg);
+    const blueStop = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'stop'
+    );
+    blueStop.setAttribute('offset', '100%');
+    blueStop.setAttribute('stop-color', '#80ff9b');
+    blueStop.setAttribute('stop-opacity', '1.0');
 
-    // cooldown bar background
-    const cooldownBg = document.createElement('div');
-    cooldownBg.style.width = '100%';
-    cooldownBg.style.height = '8px';
-    cooldownBg.style.background = 'rgba(255,255,255,0.08)';
-    cooldownBg.style.borderRadius = '4px';
-    cooldownBg.style.overflow = 'hidden';
-    cooldownBg.style.marginBottom = '6px';
+    blueGradient.appendChild(blueStop);
 
-    const cooldownFill = document.createElement('div');
-    cooldownFill.id = 'sprint-cooldown-fill';
-    cooldownFill.style.height = '100%';
-    cooldownFill.style.width = '0%'; // empty initially
-    cooldownFill.style.background =
-      'linear-gradient(90deg, rgba(255,130,130,0.95), rgba(255,80,80,0.95))';
-    cooldownFill.style.transformOrigin = 'left';
-    cooldownFill.style.transition = 'width 0.08s linear';
+    // Red gradient for cooldown
+    const redGradient = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'linearGradient'
+    );
+    redGradient.setAttribute('id', 'cooldownGradient');
+    redGradient.setAttribute('x1', '0%');
+    redGradient.setAttribute('y1', '0%');
+    redGradient.setAttribute('x2', '100%');
+    redGradient.setAttribute('y2', '0%');
 
-    cooldownBg.appendChild(cooldownFill);
-    container.appendChild(cooldownBg);
+    const redStop = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'stop'
+    );
+    redStop.setAttribute('offset', '100%');
+    redStop.setAttribute('stop-color', '#ff2727');
+    redStop.setAttribute('stop-opacity', '1.0');
 
-    // text line for times
-    const info = document.createElement('div');
-    info.id = 'sprint-info-text';
-    info.style.fontSize = '11px';
-    info.style.opacity = '0.95';
-    info.textContent = 'Ready';
-    container.appendChild(info);
+    redGradient.appendChild(redStop);
 
+    defs.appendChild(blueGradient);
+    defs.appendChild(redGradient);
+    svg.appendChild(defs);
+
+    // Background circle for stamina wheel (inner)
+    const bgCircle = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'circle'
+    );
+    bgCircle.setAttribute('cx', '60');
+    bgCircle.setAttribute('cy', '60');
+    bgCircle.setAttribute('r', '30');
+    bgCircle.setAttribute('fill', 'none');
+    bgCircle.setAttribute('stroke', '#40404040');
+    bgCircle.setAttribute('stroke-width', '8');
+    svg.appendChild(bgCircle);
+
+    // Background circle for cooldown wheel (outer)
+    const cooldownBgCircle = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'circle'
+    );
+    cooldownBgCircle.setAttribute('cx', '60');
+    cooldownBgCircle.setAttribute('cy', '60');
+    cooldownBgCircle.setAttribute('r', '42');
+    cooldownBgCircle.setAttribute('fill', 'none');
+    cooldownBgCircle.setAttribute('stroke', '#40404040');
+    cooldownBgCircle.setAttribute('stroke-width', '6');
+    svg.appendChild(cooldownBgCircle);
+
+    // Stamina wheel (inner circle)
+    const staminaWheel = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'circle'
+    );
+    staminaWheel.id = 'stamina-wheel-fill';
+    staminaWheel.setAttribute('cx', '60');
+    staminaWheel.setAttribute('cy', '60');
+    staminaWheel.setAttribute('r', '30');
+    staminaWheel.setAttribute('fill', 'none');
+    staminaWheel.setAttribute('stroke', 'url(#staminaGradient)');
+    staminaWheel.setAttribute('stroke-width', '12');
+    staminaWheel.setAttribute('stroke-linecap', 'round');
+    staminaWheel.setAttribute('transform', 'rotate(-90 60 60)');
+    staminaWheel.setAttribute('stroke-dasharray', '188.495559215');
+    staminaWheel.setAttribute('stroke-dashoffset', '0');
+    staminaWheel.style.transition = 'stroke-dashoffset 0.1s ease-out';
+    svg.appendChild(staminaWheel);
+
+    // Cooldown wheel (outer circle)
+    const cooldownWheel = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'circle'
+    );
+    cooldownWheel.id = 'cooldown-wheel-fill';
+    cooldownWheel.setAttribute('cx', '60');
+    cooldownWheel.setAttribute('cy', '60');
+    cooldownWheel.setAttribute('r', '42');
+    cooldownWheel.setAttribute('fill', 'none');
+    cooldownWheel.setAttribute('stroke', 'url(#cooldownGradient)');
+    cooldownWheel.setAttribute('stroke-width', '8');
+    cooldownWheel.setAttribute('stroke-linecap', 'round');
+    cooldownWheel.setAttribute('transform', 'rotate(-90 60 60)');
+    cooldownWheel.setAttribute('stroke-dasharray', '263.893782902');
+    cooldownWheel.setAttribute('stroke-dashoffset', '263.893782902');
+    cooldownWheel.style.transition = 'stroke-dashoffset 0.1s ease-out';
+    svg.appendChild(cooldownWheel);
+
+    container.appendChild(svg);
     document.body.appendChild(container);
   }
 
   _updateSprintUI() {
-    const staminaFill = document.getElementById('sprint-stamina-fill');
-    const cooldownFill = document.getElementById('sprint-cooldown-fill');
-    const info = document.getElementById('sprint-info-text');
+    const container = document.getElementById('stamina-wheel');
+    const staminaWheel = document.getElementById('stamina-wheel-fill');
+    const cooldownWheel = document.getElementById('cooldown-wheel-fill');
 
-    if (!staminaFill || !cooldownFill || !info) return;
+    if (!container || !staminaWheel || !cooldownWheel) return;
+
+    const staminaCircumference = 188.495559215; // 2π × 30
+    const cooldownCircumference = 263.893782902; // 2π × 42
 
     const staminaRemaining = Math.max(
       0,
       this.sprintMaxDuration - this.#sprintTimer
     );
-    const staminaPct = (staminaRemaining / this.sprintMaxDuration) * 100;
-    staminaFill.style.width = `${staminaPct}%`;
+    const staminaPct = staminaRemaining / this.sprintMaxDuration;
+
+    // Check if stamina or cooldown values have changed
+    const staminaChanged = this.#sprintTimer !== this.#lastStaminaTimer;
+    const cooldownChanged = this.#cooldownTimer !== this.#lastCooldownTimer;
+    const isActive = staminaChanged || cooldownChanged || this.#isInCooldown;
+
+    // Update activity tracking
+    if (isActive) {
+      this.#lastActivityTime = performance.now() / 1000; // Convert to seconds
+
+      // Show the wheel if it's not visible
+      if (!this.#isWheelVisible) {
+        container.style.opacity = '1';
+        this.#isWheelVisible = true;
+      }
+    } else {
+      // Check if enough time has passed since last activity
+      const currentTime = performance.now() / 1000;
+      const timeSinceActivity = currentTime - this.#lastActivityTime;
+
+      if (timeSinceActivity >= this.#fadeTimeout && this.#isWheelVisible) {
+        container.style.opacity = '0';
+        this.#isWheelVisible = false;
+      }
+    }
+
+    // Update the wheel visuals
+    const staminaOffset = staminaCircumference * (1 - staminaPct);
+    staminaWheel.setAttribute('stroke-dashoffset', staminaOffset.toString());
 
     if (this.#isInCooldown) {
-      const cooldownLeft = Math.max(
-        0,
-        this.sprintCooldownDuration - this.#cooldownTimer
-      );
       const cooldownPct = Math.min(
-        100,
-        (this.#cooldownTimer / this.sprintCooldownDuration) * 100
+        1,
+        this.#cooldownTimer / this.sprintCooldownDuration
       );
-      cooldownFill.style.width = `${cooldownPct}%`;
-      info.textContent = `Cooldown: ${cooldownLeft.toFixed(2)}s`;
+      const cooldownOffset = cooldownCircumference * (1 - cooldownPct);
+      cooldownWheel.setAttribute(
+        'stroke-dashoffset',
+        cooldownOffset.toString()
+      );
+      staminaWheel.style.opacity = '0.3';
     } else {
-      cooldownFill.style.width = '0%';
-      info.textContent = `Stamina: ${staminaRemaining.toFixed(2)}s`;
+      cooldownWheel.setAttribute(
+        'stroke-dashoffset',
+        cooldownCircumference.toString()
+      );
+      staminaWheel.style.opacity = '1';
     }
+
+    // Store current values for next frame comparison
+    this.#lastStaminaTimer = this.#sprintTimer;
+    this.#lastCooldownTimer = this.#cooldownTimer;
   }
 
   destroy() {
+    const wheelContainer = document.getElementById('stamina-wheel');
+    if (wheelContainer) {
+      wheelContainer.remove();
+    }
+
     if (this.keyboard) {
       try {
         this.keyboard.pause();

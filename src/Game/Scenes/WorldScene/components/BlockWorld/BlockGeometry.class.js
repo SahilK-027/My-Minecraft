@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export class BlockGeometry {
-  static createGeometry(atlas, blockConfig) {
+  static createGeometry() {
     const geometry = new THREE.BufferGeometry();
 
     // Vertices: Using consistent winding order (counter-clockwise when viewed from outside)

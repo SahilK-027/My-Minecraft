@@ -36,16 +36,6 @@ export default class Time extends EventEmitter {
     this.delta = 0;
   }
 
-  pause() {
-    if (this.isPaused) return;
-    this.stopLoop();
-  }
-
-  resume() {
-    if (!this.isPaused) return;
-    this.startLoop();
-  }
-
   animate(timestamp) {
     if (this.isPaused) return;
 
