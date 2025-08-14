@@ -231,7 +231,7 @@ export default class Game {
   }
 
   _onCameraUnlock() {
-    document.getElementById('menu').style.display = 'block';
+    document.getElementById('menu').style.display = 'flex';
     this.playBtn.style.display = 'block';
     this.playBtn.innerText = 'Resume Exploration';
     this.playBtn.style.cursor = 'not-allowed';
