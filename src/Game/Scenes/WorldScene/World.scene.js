@@ -9,6 +9,9 @@ export default class World {
     this.scene = this.game.scene;
 
     this.blockWorld = new BlockWorld();
+    this.blockWorld.generateBlockWorld();
+    this.scene.add(this.blockWorld);
+
     this.player = new Player(
       this.game.cameraInstance.FPPCamera,
       this.game.cameraInstance.FPPControls

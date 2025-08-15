@@ -41,7 +41,7 @@ export const blocks = {
     id: 7,
     name: 'goldOre',
     scale: { x: 50, y: 55, z: 52 },
-    scarcity: 0.9,
+    scarcity: 0.95,
   },
 };
 
