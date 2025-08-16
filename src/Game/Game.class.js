@@ -52,6 +52,8 @@ export default class Game {
     this._onCameraUnlock = this._onCameraUnlock.bind(this);
     this.lockCamera = this.lockCamera.bind(this);
 
+    this.initFog();
+
     // Setup gameplay-specific event listeners only if not in debug mode
     if (!this.isDebugMode) {
       this._setupGameplayEventListeners();
@@ -83,6 +85,14 @@ export default class Game {
       this.update(this.time.delta);
     });
     this.time.startLoop();
+  }
+
+  initFog() {
+    this.scene.fog = new THREE.Fog(
+      this.themeConfig.fog_color,
+      this.themeConfig.fog_start,
+      this.themeConfig.fog_end
+    );
   }
 
   _setupGameplayEventListeners() {

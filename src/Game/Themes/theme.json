@@ -3,29 +3,29 @@
         "spookyDawn": {
             "skyColor": "#3E2F4A",
             "fogColor": "#2A2A2F",
-            "fogStart": 0.1,
-            "fogEnd": 0.4,
+            "fogStart": 1,
+            "fogEnd": 40,
             "horizonAccent": "#664155"
         },
         "midnightForest": {
             "skyColor": "#0B1E2D",
             "fogColor": "#071216",
-            "fogStart": 0.05,
-            "fogEnd": 0.3,
+            "fogStart": 10,
+            "fogEnd": 30,
             "horizonAccent": "#24343F"
         },
         "frozenPeak": {
             "skyColor": "#A0C4FF",
             "fogColor": "#E0F7FF",
-            "fogStart": 0.2,
-            "fogEnd": 0.6,
+            "fogStart": 5,
+            "fogEnd": 50,
             "horizonAccent": "#D0E8FF"
         },
         "windsweptHills": {
             "skyColor": "#7DA2FF",
             "fogColor": "#7DA2FF",
-            "fogStart": 0.2,
-            "fogEnd": 0.6,
+            "fogStart": 10,
+            "fogEnd": 100,
             "horizonAccent": "#D0E8FF"
         }
     }

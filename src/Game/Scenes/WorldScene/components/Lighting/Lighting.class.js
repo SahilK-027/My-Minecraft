@@ -3,13 +3,18 @@ import Game from '../../../../Game.class';
 import DebugGUI from '../../../../Utils/DebugGUI';
 
 export default class Lighting {
-  constructor({ helperEnabled = false } = {}) {
+  constructor({ helperEnabled = false } = {}, player) {
     this.game = Game.getInstance();
     this.scene = this.game.scene;
     this.resources = this.game.resources;
     this.helperEnabled = helperEnabled;
     this.debug = DebugGUI.getInstance();
     this.isDebugMode = this.game.isDebugMode;
+    this.player = player;
+
+    this.originalKeyOffset = new THREE.Vector3(-120, 52, -8);
+    this.originalFillOffset = new THREE.Vector3(50, 30, 40);
+    this.originalRimOffset = new THREE.Vector3(60, 30, -60);
 
     this.setThreePointLights();
     if (this.isDebugMode) {
@@ -19,12 +24,12 @@ export default class Lighting {
 
   setThreePointLights() {
     // ---------- KEY LIGHT (Sun) ----------
-    this.keyLight = new THREE.DirectionalLight(0xfff1d6, 3.0);
+    this.keyLight = new THREE.DirectionalLight(0xfff1d6, 2.0);
     this.keyLight.position.set(-120, 52, -8);
     this.keyLight.castShadow = true;
 
-    this.keyLight.shadow.mapSize.set(512, 512);
-    const d = 120;
+    this.keyLight.shadow.mapSize.set(1024, 1024);
+    const d = 200;
     this.keyLight.shadow.camera.left = -d / 2;
     this.keyLight.shadow.camera.right = d / 2;
     this.keyLight.shadow.camera.bottom = -d / 4;
@@ -35,6 +40,7 @@ export default class Lighting {
     this.keyLight.shadow.bias = -0.00155;
 
     this.scene.add(this.keyLight);
+    this.scene.add(this.keyLight.target);
 
     // ---------- HEMISPHERE LIGHT ----------
     this.hemisphere = new THREE.HemisphereLight(0xbfe7ff, 0x8b6b4a, 1.0);
@@ -66,6 +72,21 @@ export default class Lighting {
       this.scene.add(new THREE.DirectionalLightHelper(this.rimLight, 1));
       this.scene.add(new THREE.HemisphereLightHelper(this.hemisphere, 4));
     }
+  }
+
+  update() {
+    const playerPos = this.player.playerPosition;
+    if (!this.player || !playerPos) return;
+
+    // Update key light position relative to player
+    this.keyLight.position.copy(playerPos).add(this.originalKeyOffset);
+    this.keyLight.target.position.copy(playerPos);
+
+    // Update fill light position relative to player
+    this.fillLight.position.copy(playerPos).add(this.originalFillOffset);
+
+    // Update rim light position relative to player
+    this.rimLight.position.copy(playerPos).add(this.originalRimOffset);
   }
 
   initGUI() {

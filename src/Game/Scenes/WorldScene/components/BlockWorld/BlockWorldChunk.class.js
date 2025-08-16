@@ -15,6 +15,7 @@ export default class BlockWorldChunk extends THREE.Group {
     seasonGrass
   ) {
     super();
+    this.loaded = false;
 
     this.WORLD_PARAMS = WORLD_PARAMS;
     this.BLOCK_CHUNK_CONFIG = BLOCK_CHUNK_CONFIG;
@@ -40,7 +41,7 @@ export default class BlockWorldChunk extends THREE.Group {
     );
   }
 
-  generateBlockWorld(Ccnt) {
+  generateBlockWorld() {
     const randomNumberGenerator = new RandomNumberGenerator(
       this.WORLD_PARAMS.seed
     );
@@ -48,7 +49,9 @@ export default class BlockWorldChunk extends THREE.Group {
     this.initBlockWorldTerrain();
     this.generateResources(randomNumberGenerator);
     this.generateTerrain(randomNumberGenerator);
-    return this.generateMeshInstances(Ccnt);
+    this.generateMeshInstances();
+
+    this.loaded = true;
   }
 
   initBlockWorldTerrain() {
@@ -147,7 +150,7 @@ export default class BlockWorldChunk extends THREE.Group {
     this.clear();
   }
 
-  generateMeshInstances(Ccnt) {
+  generateMeshInstances() {
     this.clear();
     const { width, height, depth } = this.BLOCK_CHUNK_CONFIG;
 
@@ -201,9 +204,6 @@ export default class BlockWorldChunk extends THREE.Group {
 
     // ---- PASS 4: Add to world ----
     this.add(...Object.values(meshes));
-
-    console.log(`Generated chunk with ID: ${Ccnt}`);
-    return Object.values(meshes).reduce((sum, m) => sum + (m.count || 0), 0);
   }
 
   getBlock(x, y, z) {

@@ -10,15 +10,15 @@ export default class BlockWorld extends THREE.Group {
     seed: 3608,
     terrain: {
       scale: 47,
-      magnitude: 0.25,
+      magnitude: 0.5,
       offset: 0.7,
     },
   };
 
   BLOCK_CHUNK_CONFIG = {
-    width: 64,
-    height: 32,
-    depth: 64,
+    width: 32,
+    height: 16,
+    depth: 32,
   };
 
   GRASS_SEASONS_CONFIG = {
@@ -40,6 +40,11 @@ export default class BlockWorld extends THREE.Group {
       variationTexture: 'winterGrass',
     },
   };
+
+  DRAW_DISTANCE = 3;
+
+  ASYNC_LOADING = true;
+
   constructor(seed = 3608) {
     super();
     this.game = Game.getInstance();
@@ -183,10 +188,9 @@ export default class BlockWorld extends THREE.Group {
 
   generateBlockWorld() {
     this.disposeChunks();
-    let CCnt = 0;
-    let instancesCnt = 0;
-    for (let x = -1; x <= 1; x++) {
-      for (let z = -1; z <= 1; z++) {
+
+    for (let x = -this.DRAW_DISTANCE; x <= this.DRAW_DISTANCE; x++) {
+      for (let z = -this.DRAW_DISTANCE; z <= this.DRAW_DISTANCE; z++) {
         const chunk = new BlockWorldChunk(
           this.WORLD_PARAMS,
           this.BLOCK_CHUNK_CONFIG,
@@ -201,12 +205,103 @@ export default class BlockWorld extends THREE.Group {
           z * this.BLOCK_CHUNK_CONFIG.depth
         );
         chunk.userData = { x, z };
-        instancesCnt += chunk.generateBlockWorld(CCnt);
+        chunk.generateBlockWorld();
         this.add(chunk);
-        CCnt++;
       }
     }
-    console.log(`Total generated instances:`, instancesCnt);
+
+    console.log('All initial chunks instantiated');
+  }
+
+  update(player) {
+    // Find the visible chunks based on players position
+    const visibleChunks = this.getVisibleChunks(player);
+    // Compare with the current set of chunks
+    const chunksToAdd = this.getChunksToAdd(visibleChunks);
+    // Remove chunks that are no longer visible
+    this.removeUnusedChunksFromWorld(visibleChunks);
+    // Add newly visible chunks
+    for (const chunk of chunksToAdd) {
+      this.generateChunk(chunk.x, chunk.z);
+    }
+  }
+
+  getVisibleChunks(player) {
+    const visibleChunks = [];
+    const coords = this.worldToChunkCoordinate(
+      player.playerPosition.x,
+      player.playerPosition.y,
+      player.playerPosition.z
+    );
+
+    const chunkX = coords.chunk.x;
+    const chunkZ = coords.chunk.z;
+
+    for (
+      let x = chunkX - this.DRAW_DISTANCE;
+      x <= chunkX + this.DRAW_DISTANCE;
+      x++
+    ) {
+      for (
+        let z = chunkZ - this.DRAW_DISTANCE;
+        z <= chunkZ + this.DRAW_DISTANCE;
+        z++
+      ) {
+        visibleChunks.push({ x, z });
+      }
+    }
+    return visibleChunks;
+  }
+
+  getChunksToAdd(visibleChunks) {
+    return visibleChunks.filter((chunk) => {
+      const chunkExists = this.children
+        .map((obj) => obj.userData)
+        .find(({ x, z }) => chunk.x === x && chunk.z === z);
+
+      return !chunkExists;
+    });
+  }
+
+  removeUnusedChunksFromWorld(visibleChunks) {
+    const chunksToRemove = this.children.filter((chunk) => {
+      const { x, z } = chunk.userData;
+      const chunkExists = visibleChunks.find(
+        (visibleChunk) => visibleChunk.x === x && visibleChunk.z === z
+      );
+      return !chunkExists;
+    });
+
+    for (const chunk of chunksToRemove) {
+      chunk.disposeOldMeshInstances();
+      this.remove(chunk);
+    }
+  }
+
+  generateChunk(x, z) {
+    const chunk = new BlockWorldChunk(
+      this.WORLD_PARAMS,
+      this.BLOCK_CHUNK_CONFIG,
+      this.atlas,
+      this.atlasTexture,
+      this.blockConfigs,
+      this.seasonGrass
+    );
+    chunk.position.set(
+      x * this.BLOCK_CHUNK_CONFIG.width,
+      0,
+      z * this.BLOCK_CHUNK_CONFIG.depth
+    );
+    chunk.userData = { x, z };
+    if (this.ASYNC_LOADING) {
+      requestIdleCallback(chunk.generateBlockWorld.bind(chunk), {
+        timeout: 1000,
+      });
+    } else {
+      chunk.generateBlockWorld();
+    }
+
+    this.add(chunk);
   }
 
   worldToChunkCoordinate(x, y, z) {
@@ -237,7 +332,7 @@ export default class BlockWorld extends THREE.Group {
     const coords = this.worldToChunkCoordinate(x, y, z);
     const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
 
-    if (chunk) {
+    if (chunk && chunk.loaded) {
       return chunk.getBlock(coords.block.x, coords.block.y, coords.block.z);
     } else {
       return null;
@@ -273,18 +368,18 @@ export default class BlockWorld extends THREE.Group {
 
   initGUI() {
     this.debug.add(
-      this.BLOCK_CHUNK_CONFIG,
-      'width',
+      this,
+      'DRAW_DISTANCE',
       {
-        min: 2,
-        max: 120,
+        min: 0,
+        max: 5,
         step: 1,
-        label: 'Width_X',
+        label: 'Draw Distance',
         onChange: () => {
           this.generateBlockWorld();
         },
       },
-      'BlockWorldChunk Folder'
+      'BlockWorld Folder'
     );
     this.debug.add(
       this.BLOCK_CHUNK_CONFIG,
@@ -294,20 +389,6 @@ export default class BlockWorld extends THREE.Group {
         max: 64,
         step: 1,
         label: 'Height_Y',
-        onChange: () => {
-          this.generateBlockWorld();
-        },
-      },
-      'BlockWorldChunk Folder'
-    );
-    this.debug.add(
-      this.BLOCK_CHUNK_CONFIG,
-      'depth',
-      {
-        min: 2,
-        max: 120,
-        step: 1,
-        label: 'Depth_Z',
         onChange: () => {
           this.generateBlockWorld();
         },

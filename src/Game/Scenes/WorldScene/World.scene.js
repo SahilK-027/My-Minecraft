@@ -17,8 +17,11 @@ export default class World {
       this.game.cameraInstance.FPPControls
     );
 
-    this.lighting = new Lighting({ helperEnabled: false });
+    this.lighting = new Lighting({ helperEnabled: true }, this.player);
   }
 
-  update() {}
+  update() {
+    this.blockWorld.update(this.player);
+    this.lighting.update();
+  }
 }
