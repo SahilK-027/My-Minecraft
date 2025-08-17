@@ -43,7 +43,7 @@ export default class Player {
     this.keyboard = new KeyboardControls({
       controls: this.controls,
       resetCallback: () => {
-        this.playerPosition.set(30, 50, 40);
+        this.playerPosition.set(25.5, 37.25, 17.5);
         this.velocity.set(0, 0, 0);
         this.#sprintTimer = 0;
         this.#cooldownTimer = 0;
@@ -51,7 +51,7 @@ export default class Player {
       },
     });
 
-    this.playerPosition.set(30, 50, 40);
+    this.playerPosition.set(25.5, 37.25, 17.5);
     this.scene.add(this.FPPCamera);
 
     if (this.isDebugMode) {

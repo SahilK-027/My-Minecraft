@@ -7,9 +7,9 @@ import DebugGUI from '../../../../Utils/DebugGUI';
 
 export default class BlockWorld extends THREE.Group {
   WORLD_PARAMS = {
-    seed: 3608,
+    seed: 0,
     terrain: {
-      scale: 47,
+      scale: 60,
       magnitude: 0.5,
       offset: 0.7,
     },
