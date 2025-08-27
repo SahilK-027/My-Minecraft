@@ -13,6 +13,7 @@ export default class BlockWorld extends THREE.Group {
       magnitude: 0.5,
       offset: 0.7,
     },
+    minMiningDepth: 0,
   };
 
   BLOCK_CHUNK_CONFIG = {
@@ -67,6 +68,16 @@ export default class BlockWorld extends THREE.Group {
     this.atlas = new TextureAtlas(32, 512);
 
     this.blockConfigs = {
+      [blocks.bedrock.id]: {
+        faces: {
+          front: 'bedrock',
+          back: 'bedrock',
+          top: 'bedrock',
+          bottom: 'bedrock',
+          right: 'bedrock',
+          left: 'bedrock',
+        },
+      },
       [blocks.grass.id]: {
         faces: {
           front: 'grassSide',
@@ -154,6 +165,7 @@ export default class BlockWorld extends THREE.Group {
         grassTextureSideToRender = this.textureResources.autumnGrassSideTexture;
     }
 
+    this.atlas.addTexture('bedrock', this.textureResources.bedrockTexture);
     this.atlas.addTexture('grassTop', grassTextureTopToRender);
     this.atlas.addTexture(
       this.seasonGrass.variationTexture,
@@ -346,6 +358,61 @@ export default class BlockWorld extends THREE.Group {
       }
     });
     this.clear();
+  }
+
+  removeBlock(x, y, z) {
+    if (y <= this.WORLD_PARAMS.minMiningDepth) {
+      window.alert('Cannot mine beyond this depth!');
+      return;
+    }
+
+    const coords = this.worldToChunkCoordinate(x, y, z);
+    const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+    if (chunk) {
+      chunk.removeBlock(coords.block.x, coords.block.y, coords.block.z);
+
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dz = -1; dz <= 1; dz++) {
+            if (dx === 0 && dy === 0 && dz === 0) continue;
+            this.revealBlock(x + dx, y + dy, z + dz);
+          }
+        }
+      }
+    }
+  }
+
+  revealBlock(x, y, z) {
+    const coords = this.worldToChunkCoordinate(x, y, z);
+    const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+    if (!chunk || !chunk.loaded) {
+      console.warn(
+        `Cannot remove block: chunk not found or not loaded at (${coords.chunk.x}, ${coords.chunk.z})`
+      );
+      return;
+    }
+
+    const block = chunk.getBlock(
+      coords.block.x,
+      coords.block.y,
+      coords.block.z
+    );
+    if (!block || block.id === blocks.empty.id) {
+      console.warn(`Cannot remove block: no block at (${x}, ${y}, ${z})`);
+      return;
+    }
+
+    // Only reveal if block was previously obscured
+    if (chunk.isBlockObscured(coords.block.x, coords.block.y, coords.block.z)) {
+      return; // Still obscured, don't reveal
+    }
+
+    // Block should be visible now, add instance if it doesn't have one
+    if (block.instanceId === null) {
+      chunk.addBlockInstance(coords.block.x, coords.block.y, coords.block.z);
+    }
   }
 
   onSeasonChange(newSeason) {

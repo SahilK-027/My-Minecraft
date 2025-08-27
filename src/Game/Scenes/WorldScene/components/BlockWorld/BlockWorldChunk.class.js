@@ -116,7 +116,9 @@ export default class BlockWorldChunk extends THREE.Group {
           const cell = this.getBlock(x, y, z);
           const currentId = cell ? cell.id : blocks.empty.id;
 
-          if (y < height && currentId === blocks.empty.id) {
+          if (y === 0) {
+            this.setBlockId(x, y, z, blocks.bedrock.id);
+          } else if (y < height && currentId === blocks.empty.id) {
             // fill interior with dirt only if it wasn't already set by resources
             this.setBlockId(x, y, z, blocks.dirt.id);
           } else if (y === height) {
@@ -171,7 +173,7 @@ export default class BlockWorldChunk extends THREE.Group {
         const material = blockType.material || this.atlasMaterial;
 
         const mesh = new THREE.InstancedMesh(geometry, material, maxCount);
-        mesh.name = String(blockType.id);
+        mesh.name = blockType.id;
         mesh.count = 0;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -211,6 +213,127 @@ export default class BlockWorldChunk extends THREE.Group {
       return this.data[x][y][z];
     } else {
       return null;
+    }
+  }
+
+  // --- addBlockInstance ---
+  addBlockInstance(x, y, z) {
+    const block = this.getBlock(x, y, z);
+    if (!block || block.id === blocks.empty.id) {
+      console.warn(`addBlockInstance: no block at (${x}, ${y}, ${z})`);
+      return;
+    }
+
+    if (block.instanceId !== null) {
+      console.warn(
+        `addBlockInstance: block at (${x}, ${y}, ${z}) already has instance`
+      );
+      return;
+    }
+
+    const mesh = this.children.find(
+      (m) =>
+        (m.userData && m.userData.blockId === block.id) ||
+        String(m.name) === String(block.id)
+    );
+
+    if (!mesh) {
+      console.warn(`addBlockInstance: no mesh found for block ID: ${block.id}`);
+      return;
+    }
+
+    if (mesh.count >= mesh.instanceMatrix.count) {
+      console.warn(
+        `addBlockInstance: mesh capacity reached for block ${block.id}`
+      );
+      return;
+    }
+
+    const instanceId = mesh.count;
+    mesh.count++;
+    this.setBlockInstanceId(x, y, z, instanceId);
+
+    const matrix = new THREE.Matrix4();
+    matrix.setPosition(x, y, z);
+    mesh.setMatrixAt(instanceId, matrix);
+    mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  // --- deleteBlockInstance ---
+  deleteBlockInstance(x, y, z) {
+    const block = this.getBlock(x, y, z);
+    if (!block || block.instanceId == null) {
+      console.warn(`deleteBlockInstance: no instance at (${x}, ${y}, ${z})`);
+      return;
+    }
+
+    const mesh = this.children.find(
+      (m) =>
+        (m.userData && m.userData.blockId === block.id) ||
+        String(m.name) === String(block.id)
+    );
+
+    if (!mesh) {
+      console.warn(`deleteBlockInstance: no mesh for block ${block.id}`);
+      this.setBlockInstanceId(x, y, z, null);
+      this.setBlockId(x, y, z, blocks.empty.id);
+      return;
+    }
+
+    const instanceId = block.instanceId;
+    const lastIndex = mesh.count - 1;
+
+    if (lastIndex < 0 || instanceId > lastIndex) {
+      console.warn(
+        `deleteBlockInstance: invalid instance index ${instanceId}, mesh count: ${mesh.count}`
+      );
+      this.setBlockInstanceId(x, y, z, null);
+      this.setBlockId(x, y, z, blocks.empty.id);
+      return;
+    }
+
+    if (instanceId === lastIndex) {
+      // Deleting the last instance, just decrement count
+      mesh.count = lastIndex;
+    } else {
+      // Get the matrix for the last instance
+      const lastMatrix = new THREE.Matrix4();
+      mesh.getMatrixAt(lastIndex, lastMatrix);
+
+      // Move last instance to the deleted position
+      mesh.setMatrixAt(instanceId, lastMatrix);
+
+      // Find which block corresponds to the last instance and update its mapping
+      const lastPos = new THREE.Vector3();
+      lastPos.setFromMatrixPosition(lastMatrix);
+      const lx = Math.round(lastPos.x);
+      const ly = Math.round(lastPos.y);
+      const lz = Math.round(lastPos.z);
+
+      // Update the block that was moved to point to the new instance ID
+      const movedBlock = this.getBlock(lx, ly, lz);
+      if (movedBlock && movedBlock.instanceId === lastIndex) {
+        this.setBlockInstanceId(lx, ly, lz, instanceId);
+      }
+
+      // Decrement count
+      mesh.count = lastIndex;
+    }
+
+    mesh.instanceMatrix.needsUpdate = true;
+    if (typeof mesh.computeBoundingSphere === 'function') {
+      mesh.computeBoundingSphere();
+    }
+
+    // Clear the deleted block's data
+    this.setBlockInstanceId(x, y, z, null);
+    this.setBlockId(x, y, z, blocks.empty.id);
+  }
+
+  removeBlock(x, y, z) {
+    const block = this.getBlock(x, y, z);
+    if (block && block.id !== blocks.empty) {
+      this.deleteBlockInstance(x, y, z);
     }
   }
 

@@ -70,8 +70,8 @@ export default class Player {
 
     if (this.isDebugMode) {
       this.boundsHelper = new THREE.Mesh(
-        new THREE.CapsuleGeometry(this.radius, this.height, 16, 16, 16),
-        new THREE.MeshToonMaterial({ color: 'red', wireframe: true })
+        new THREE.CylinderGeometry(this.radius, this.radius, this.height, 16),
+        new THREE.MeshBasicMaterial({ wireframe: true, color: 'red' })
       );
       this.scene.add(this.boundsHelper);
 
@@ -200,7 +200,6 @@ export default class Player {
 
       this.selectionHelper.position.copy(this.selectedCoords);
       this.selectionHelper.visible = true;
-      console.log(this.selectedCoords);
     } else {
       this.selectedCoords = null;
       this.selectionHelper.visible = false;

@@ -37,7 +37,7 @@ export default class Camera {
   setControls() {
     this.orbitControls = new OrbitControls(this.orbitCamera, this.canvas);
     this.orbitControls.enableDamping = true;
-    this.orbitControls.maxPolarAngle = Math.PI / 2.3;
+    // this.orbitControls.maxPolarAngle = Math.PI / 2.3;
     this.orbitControls.target.set(32, 16, 32);
 
     this.FPPControls = new PointerLockControls(this.FPPCamera, document.body);

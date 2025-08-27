@@ -7,6 +7,7 @@ import World from './Scenes/WorldScene/World.scene';
 import DebugGUI from './Utils/DebugGUI';
 import { getThemeConfig } from './Utils/ThemeManager.class';
 import PhysicsSystem from './Systems/PhysicsSystem.class';
+import Mouse from './Input/Mouse.class';
 
 export default class Game {
   constructor(canvas, resources, isDebugMode) {
@@ -25,6 +26,7 @@ export default class Game {
     // Scene essentials
     this.canvas = canvas;
     this.sizes = new Sizes();
+    this.mouse = new Mouse();
     this.scene = new THREE.Scene();
     this.cameraInstance = new Camera();
     this.time = new Time(false);
@@ -52,7 +54,7 @@ export default class Game {
     this._onCameraUnlock = this._onCameraUnlock.bind(this);
     this.lockCamera = this.lockCamera.bind(this);
 
-    this.initFog();
+    // this.initFog();
 
     // Setup gameplay-specific event listeners only if not in debug mode
     if (!this.isDebugMode) {
@@ -81,10 +83,20 @@ export default class Game {
     this.sizes.on('resize', () => {
       this.resize();
     });
+    this.mouse.on('mousedown', (event) => {
+      this.handleMouseDown(event);
+    });
     this.time.on('animate', () => {
       this.update(this.time.delta);
     });
     this.time.startLoop();
+  }
+
+  handleMouseDown(event) {
+    if (this.gameControls.isLocked && this.player.selectedCoords) {
+      const { x, y, z } = this.player.selectedCoords;
+      this.world.blockWorld.removeBlock(x, y, z);
+    }
   }
 
   initFog() {

@@ -1,5 +1,10 @@
 const ASSETS = [
   {
+    id: 'bedrockTexture',
+    path: ['/assets/textures/blocks/bedrock/bedrock_3.png'],
+    type: 'texture',
+  },
+  {
     id: 'grassTexture',
     path: ['/assets/textures/blocks/grass/grass.png'],
     type: 'texture',

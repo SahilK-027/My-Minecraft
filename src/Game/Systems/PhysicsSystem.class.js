@@ -124,7 +124,7 @@ export default class PhysicsSystem {
       },
       y: {
         min: Math.floor(player.playerPosition.y - player.height),
-        max: Math.floor(player.playerPosition.y),
+        max: Math.ceil(player.playerPosition.y + 0.1),
       },
       z: {
         min: Math.floor(player.playerPosition.z - player.radius),
@@ -223,6 +223,11 @@ export default class PhysicsSystem {
       if (normal.y > 0.5) {
         player.onGround = true;
         if (player.velocity.y < 0) player.velocity.y = 0;
+      }
+
+      if (normal.y < -0.5) {
+        // Ceiling collision
+        if (player.velocity.y > 0) player.velocity.y = 0; // Stop upward movement
       }
     }
   }
