@@ -18,7 +18,7 @@ export default class Lighting {
 
     this.shadowCameraSize = 100;
     this.lastShadowUpdatePos = new THREE.Vector3();
-    this.shadowUpdateDistance = 10;
+    this.shadowUpdateDistance = 16;
 
     this.setThreePointLights();
     if (this.isDebugMode) {
@@ -70,7 +70,7 @@ export default class Lighting {
     this.keyLight.shadow.needsUpdate = true;
 
     // ---------------- HELPERS ----------------
-    if (this.helperEnabled) {
+    if (this.helperEnabled && this.isDebugMode) {
       this.scene.add(new THREE.DirectionalLightHelper(this.keyLight, 3));
       this.shadowHelper = new THREE.CameraHelper(this.keyLight.shadow.camera);
       this.scene.add(this.shadowHelper);
