@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import Game from '../Game.class';
 import DebugGUI from '../Utils/DebugGUI';
 import KeyboardControls from '../Input/Keyboard.class';
+import selectionMaterialVertShader from './shaders/selection-mat-vertex.glsl';
+import selectionMaterialFragShader from './shaders/selection-mat-fragment.glsl';
+
+const CENTER_SCREEN = new THREE.Vector2();
 
 export default class Player {
   maxSpeed = 3.0;
@@ -27,6 +31,14 @@ export default class Player {
 
   velocity = new THREE.Vector3();
   #worldVelocity = new THREE.Vector3();
+
+  rayCaster = new THREE.Raycaster(
+    new THREE.Vector3(),
+    new THREE.Vector3(),
+    0,
+    3
+  );
+  selectedCoords = null;
 
   constructor(FPPCamera, controls) {
     this.FPPCamera = FPPCamera;
@@ -54,6 +66,8 @@ export default class Player {
     this.playerPosition.set(25.5, 37.25, 17.5);
     this.scene.add(this.FPPCamera);
 
+    this.createSelectionHelper();
+
     if (this.isDebugMode) {
       this.boundsHelper = new THREE.Mesh(
         new THREE.CapsuleGeometry(this.radius, this.height, 16, 16, 16),
@@ -65,12 +79,132 @@ export default class Player {
     }
   }
 
+  createSelectionHelper() {
+    const group = new THREE.Group();
+
+    const size = 1.01;
+    const thickness = 0.015;
+    const half = size / 2;
+
+    const selectionMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        c1: { value: new THREE.Color('rgb(116, 68, 255)') },
+        c2: { value: new THREE.Color('rgb(15, 175, 255)') },
+        c3: { value: new THREE.Color('cyan') },
+        c4: { value: new THREE.Color('rgb(102, 255, 71)') },
+        c5: { value: new THREE.Color('rgb(255, 255, 0)') },
+        c6: { value: new THREE.Color('rgb(255, 174, 0)') },
+        c7: { value: new THREE.Color('rgb(255, 0, 0)') },
+        opacity: { value: 1.0 },
+        glowIntensity: { value: 1.0 },
+      },
+      vertexShader: selectionMaterialVertShader,
+      fragmentShader: selectionMaterialFragShader,
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+    });
+
+    const addEdge = (geoDims, position) => {
+      const geom = new THREE.BoxGeometry(...geoDims);
+      const mat = selectionMaterial.clone();
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(...position);
+      group.add(mesh);
+    };
+
+    const edges = [
+      // bottom edges
+      { geo: [size, thickness, thickness], pos: [0, -half, -half] }, // bottomFront
+      { geo: [size, thickness, thickness], pos: [0, -half, half] }, // bottomBack
+      { geo: [thickness, thickness, size], pos: [-half, -half, 0] }, // bottomLeft
+      { geo: [thickness, thickness, size], pos: [half, -half, 0] }, // bottomRight
+
+      // top edges
+      { geo: [size, thickness, thickness], pos: [0, half, -half] }, // topFront
+      { geo: [size, thickness, thickness], pos: [0, half, half] }, // topBack
+      { geo: [thickness, thickness, size], pos: [-half, half, 0] }, // topLeft
+      { geo: [thickness, thickness, size], pos: [half, half, 0] }, // topRight
+
+      // vertical edges
+      { geo: [thickness, size, thickness], pos: [-half, 0, -half] }, // verticalFrontLeft
+      { geo: [thickness, size, thickness], pos: [half, 0, -half] }, // verticalFrontRight
+      { geo: [thickness, size, thickness], pos: [-half, 0, half] }, // verticalBackLeft
+      { geo: [thickness, size, thickness], pos: [half, 0, half] }, // verticalBackRight
+    ];
+
+    edges.forEach(({ geo, pos }) => addEdge(geo, pos));
+
+    const translucentBox = new THREE.Mesh(
+      new THREE.BoxGeometry(size, size, size),
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0.25,
+        color: '#121316',
+      })
+    );
+    group.add(translucentBox);
+
+    this.selectionHelper = group;
+    this.selectionHelper.visible = false;
+    this.scene.add(this.selectionHelper);
+
+    this.selectionMaterial = selectionMaterial;
+  }
+
+  updateSelectionHelper(delta) {
+    if (this.selectionHelper && this.selectionHelper.children.length > 0) {
+      this.selectionHelper.children.forEach((child) => {
+        if (
+          child.material &&
+          child.material.uniforms &&
+          child.material.uniforms.time
+        ) {
+          child.material.uniforms.time.value += delta;
+        }
+      });
+    }
+  }
+
   get worldVelocity() {
     this.#worldVelocity.copy(this.velocity);
     this.#worldVelocity.applyEuler(
       new THREE.Euler(0, this.FPPCamera.rotation.y, 0)
     );
     return this.#worldVelocity;
+  }
+
+  update(world, delta) {
+    this.updateRayCaster(world);
+    this.updateSelectionHelper(delta);
+  }
+
+  updateRayCaster(world) {
+    this.rayCaster.setFromCamera(CENTER_SCREEN, this.FPPCamera);
+    const intersections = this.rayCaster.intersectObject(world, true);
+
+    if (intersections.length > 0) {
+      const intersection = intersections[0];
+
+      // Get the position of chunk that the block is contained in
+      const chunk = intersection.object.parent;
+
+      // Get transformationMatrix of the intersected instance block into blockMatrix var
+      const blockMatrix = new THREE.Matrix4();
+      intersection.object.getMatrixAt(intersection.instanceId, blockMatrix);
+
+      // This will extract the transformations (here in case position) from blockMatrix transformationMatrix
+      this.selectedCoords = chunk.position.clone();
+      this.selectedCoords.applyMatrix4(blockMatrix);
+
+      this.selectionHelper.position.copy(this.selectedCoords);
+      this.selectionHelper.visible = true;
+      console.log(this.selectedCoords);
+    } else {
+      this.selectedCoords = null;
+      this.selectionHelper.visible = false;
+    }
   }
 
   applyWorldDeltaVelocity(dv) {
@@ -436,5 +570,58 @@ export default class Player {
       { min: 0, max: 50, step: 0.1, label: 'Max Speed' },
       'Player'
     );
+
+    if (this.selectionMaterial && this.selectionMaterial.uniforms) {
+      const uniforms = this.selectionMaterial.uniforms;
+
+      this.debug.add(
+        uniforms.c1,
+        'value',
+        { label: 'Color 1', color: true },
+        'Selection Colors'
+      );
+
+      this.debug.add(
+        uniforms.c2,
+        'value',
+        { label: 'Color 2', color: true },
+        'Selection Colors'
+      );
+
+      this.debug.add(
+        uniforms.c3,
+        'value',
+        { label: 'Color 3', color: true },
+        'Selection Colors'
+      );
+
+      this.debug.add(
+        uniforms.c4,
+        'value',
+        { label: 'Color 4', color: true },
+        'Selection Colors'
+      );
+
+      this.debug.add(
+        uniforms.c5,
+        'value',
+        { label: 'Color 5', color: true },
+        'Selection Colors'
+      );
+
+      this.debug.add(
+        uniforms.c6,
+        'value',
+        { label: 'Color 6', color: true },
+        'Selection Colors'
+      );
+
+      this.debug.add(
+        uniforms.c7,
+        'value',
+        { label: 'Color 7', color: true },
+        'Selection Colors'
+      );
+    }
   }
 }

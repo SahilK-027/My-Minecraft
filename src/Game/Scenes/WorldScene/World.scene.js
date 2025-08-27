@@ -20,7 +20,8 @@ export default class World {
     this.lighting = new Lighting({ helperEnabled: true }, this.player);
   }
 
-  update() {
+  update(delta) {
+    this.player.update(this.blockWorld, delta);
     this.blockWorld.update(this.player);
     this.lighting.update();
   }

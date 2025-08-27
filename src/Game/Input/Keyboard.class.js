@@ -4,6 +4,7 @@ export default class KeyboardControls {
   constructor({
     controls = null,
     resetCallback = null,
+    // TODO: for winter player can slide so damping will reduce also manipulate player speed accordingly
     damping = 10,
     deadzone = 1e-3,
   } = {}) {
@@ -31,7 +32,7 @@ export default class KeyboardControls {
   }
 
   onKeyDown(event) {
-    if(this.isDebugMode) {
+    if (this.isDebugMode) {
       this.controls.lock();
     }
 

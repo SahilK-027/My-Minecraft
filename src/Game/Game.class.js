@@ -146,7 +146,7 @@ export default class Game {
     // Only update game logic if not paused
     if (!this.isPaused) {
       this.cameraInstance.update();
-      this.world.update();
+      this.world.update(delta);
       this.physics.update(delta, this.player, this.world.blockWorld);
     } else {
       // When paused, only update camera
