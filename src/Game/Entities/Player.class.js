@@ -9,7 +9,7 @@ import { blocks } from '../Data/Blocks';
 const CENTER_SCREEN = new THREE.Vector2();
 
 export default class Player {
-  maxSpeed = 3.0;
+  maxSpeed = 30.0;
   radius = 0.5;
   height = 1.75;
   jumpSpeed = 8.5;
@@ -57,7 +57,7 @@ export default class Player {
     this.keyboard = new KeyboardControls({
       controls: this.controls,
       resetCallback: () => {
-        this.playerPosition.set(25.5, 37.25, 17.5);
+        this.playerPosition.set(12.6, 38.25, -12.75);
         this.velocity.set(0, 0, 0);
         this.#sprintTimer = 0;
         this.#cooldownTimer = 0;
@@ -71,7 +71,7 @@ export default class Player {
       },
     });
 
-    this.playerPosition.set(25.5, 37.25, 17.5);
+    this.playerPosition.set(12.6, 38.25, -12.75);
     this.scene.add(this.FPPCamera);
 
     this.createSelectionHelper();

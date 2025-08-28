@@ -12,7 +12,8 @@ export default class BlockWorldChunk extends THREE.Group {
     atlas,
     atlasTexture,
     blockConfigs,
-    seasonGrass
+    seasonGrass,
+    dataStore
   ) {
     super();
     this.loaded = false;
@@ -22,6 +23,7 @@ export default class BlockWorldChunk extends THREE.Group {
     this.atlas = atlas;
     this.atlasTexture = atlasTexture;
     this.blockConfigs = blockConfigs;
+    this.dataStore = dataStore;
 
     this.game = Game.getInstance();
 
@@ -49,6 +51,7 @@ export default class BlockWorldChunk extends THREE.Group {
     this.initBlockWorldTerrain();
     this.generateResources(randomNumberGenerator);
     this.generateTerrain(randomNumberGenerator);
+    this.loadPlayerChanges();
     this.generateMeshInstances();
 
     this.loaded = true;
@@ -111,6 +114,7 @@ export default class BlockWorldChunk extends THREE.Group {
           0,
           Math.min(height, this.BLOCK_CHUNK_CONFIG.height - 1)
         );
+        height -= 2;
 
         for (let y = 0; y < this.BLOCK_CHUNK_CONFIG.height; y++) {
           const cell = this.getBlock(x, y, z);
@@ -136,6 +140,27 @@ export default class BlockWorldChunk extends THREE.Group {
           } else if (y > height) {
             // above the surface remains empty
             this.setBlockId(x, y, z, blocks.empty.id);
+          }
+        }
+      }
+    }
+  }
+
+  loadPlayerChanges() {
+    for (let x = 0; x < this.BLOCK_CHUNK_CONFIG.width; x++) {
+      for (let y = 0; y < this.BLOCK_CHUNK_CONFIG.height; y++) {
+        for (let z = 0; z < this.BLOCK_CHUNK_CONFIG.depth; z++) {
+          if (
+            this.dataStore.contains(this.position.x, this.position.z, x, y, z)
+          ) {
+            const blockId = this.dataStore.get(
+              this.position.x,
+              this.position.z,
+              x,
+              y,
+              z
+            );
+            this.setBlockId(x, y, z, blockId);
           }
         }
       }
@@ -169,11 +194,15 @@ export default class BlockWorldChunk extends THREE.Group {
           (this.blockGeometries && this.blockGeometries.get(blockType.id)) ||
           new THREE.BoxGeometry(1, 1, 1);
 
+        if (!geometry.attributes.normal) {
+          geometry.computeVertexNormals();
+        }
+
         // choose material: prefer blockType.material if present, else use atlasMaterial
         const material = blockType.material || this.atlasMaterial;
 
         const mesh = new THREE.InstancedMesh(geometry, material, maxCount);
-        mesh.name = blockType.id;
+        mesh.name = String(blockType.id);
         mesh.count = 0;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -205,6 +234,17 @@ export default class BlockWorldChunk extends THREE.Group {
     }
 
     // ---- PASS 4: Add to world ----
+    Object.values(meshes).forEach((mesh) => {
+      if (mesh.count > 0) {
+        mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.computeBoundingSphere) {
+          mesh.computeBoundingSphere();
+        }
+        if (mesh.computeBoundingBox) {
+          mesh.computeBoundingBox();
+        }
+      }
+    });
     this.add(...Object.values(meshes));
   }
 
@@ -324,50 +364,21 @@ export default class BlockWorldChunk extends THREE.Group {
     if (block && block.id !== blocks.empty) {
       this.deleteBlockInstance(x, y, z);
       this.setBlockId(x, y, z, blocks.empty.id);
-    }
-  }
-
-  expandHeight(newHeight) {
-    if (newHeight <= this.BLOCK_CHUNK_CONFIG.height) return;
-
-    const oldHeight = this.BLOCK_CHUNK_CONFIG.height;
-
-    // First, expand the data array BEFORE updating the height config
-    for (let x = 0; x < this.BLOCK_CHUNK_CONFIG.width; x++) {
-      // Ensure this.data[x] exists and has enough y-levels
-      if (!this.data[x]) {
-        this.data[x] = [];
-      }
-
-      while (this.data[x].length < newHeight) {
-        const row = [];
-        for (let z = 0; z < this.BLOCK_CHUNK_CONFIG.depth; z++) {
-          row.push({
-            id: blocks.empty.id,
-            instanceId: null,
-          });
-        }
-        this.data[x].push(row);
-      }
-    }
-
-    // Only update the height config AFTER the data structure is ready
-    this.BLOCK_CHUNK_CONFIG.height = newHeight;
-
-    // Only regenerate if we actually need more instance capacity
-    const currentMaxCount =
-      this.children.length > 0 ? this.children[0].instanceMatrix.count : 0;
-    const neededCount =
-      this.BLOCK_CHUNK_CONFIG.width * newHeight * this.BLOCK_CHUNK_CONFIG.depth;
-
-    if (neededCount > currentMaxCount) {
-      this.generateMeshInstances();
+      this.dataStore.set(
+        this.position.x,
+        this.position.z,
+        x,
+        y,
+        z,
+        blocks.empty.id
+      );
     }
   }
 
   addBlock(x, y, z, blockId) {
     if (y >= this.BLOCK_CHUNK_CONFIG.height) {
-      this.expandHeight(y + 10);
+      // TODO:
+      console.log('OBJECT');
     }
 
     const existingBlock = this.getBlock(x, y, z);
@@ -378,6 +389,7 @@ export default class BlockWorldChunk extends THREE.Group {
     if (existingBlock === null || existingBlock.id === blocks.empty.id) {
       this.setBlockId(x, y, z, blockId);
       this.addBlockInstance(x, y, z);
+      this.dataStore.set(this.position.x, this.position.z, x, y, z, blockId);
     }
   }
 

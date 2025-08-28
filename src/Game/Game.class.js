@@ -55,7 +55,7 @@ export default class Game {
     this._onCameraUnlock = this._onCameraUnlock.bind(this);
     this.lockCamera = this.lockCamera.bind(this);
 
-    // this.initFog();
+    this.initFog();
 
     // Setup gameplay-specific event listeners only if not in debug mode
     if (!this.isDebugMode) {

@@ -4,13 +4,14 @@ import { TextureAtlas } from '../../../../Utils/TextureAtlas.class';
 import { blocks, resources } from '../../../../Data/Blocks';
 import Game from '../../../../Game.class';
 import DebugGUI from '../../../../Utils/DebugGUI';
+import { DataStore } from '../../../../Utils/Datastore.class';
 
 export default class BlockWorld extends THREE.Group {
   WORLD_PARAMS = {
-    seed: 0,
+    seed: 27,
     terrain: {
-      scale: 60,
-      magnitude: 0.5,
+      scale: 70,
+      magnitude: 0.2,
       offset: 0.7,
     },
     minMiningDepth: 0,
@@ -19,11 +20,11 @@ export default class BlockWorld extends THREE.Group {
 
   BLOCK_CHUNK_CONFIG = {
     width: 32,
-    height: 16,
+    height: 28,
     depth: 32,
   };
 
-  DRAW_DISTANCE = 3;
+  DRAW_DISTANCE = 2;
 
   GRASS_SEASONS_CONFIG = {
     summer: {
@@ -46,6 +47,8 @@ export default class BlockWorld extends THREE.Group {
   };
 
   ASYNC_LOADING = true;
+
+  dataStore = new DataStore();
 
   constructor(seed = 3608) {
     super();
@@ -200,6 +203,8 @@ export default class BlockWorld extends THREE.Group {
   }
 
   generateBlockWorld() {
+    this.dataStore.clear();
+
     this.disposeChunks();
 
     for (let x = -this.DRAW_DISTANCE; x <= this.DRAW_DISTANCE; x++) {
@@ -210,7 +215,8 @@ export default class BlockWorld extends THREE.Group {
           this.atlas,
           this.atlasTexture,
           this.blockConfigs,
-          this.seasonGrass
+          this.seasonGrass,
+          this.dataStore
         );
         chunk.position.set(
           x * this.BLOCK_CHUNK_CONFIG.width,
@@ -298,7 +304,8 @@ export default class BlockWorld extends THREE.Group {
       this.atlas,
       this.atlasTexture,
       this.blockConfigs,
-      this.seasonGrass
+      this.seasonGrass,
+      this.dataStore
     );
     chunk.position.set(
       x * this.BLOCK_CHUNK_CONFIG.width,

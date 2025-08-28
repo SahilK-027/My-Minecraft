@@ -43,8 +43,6 @@ export default class KeyboardControls {
       case 'Digit1':
       case 'Digit2':
       case 'Digit3':
-      case 'Digit4':
-      case 'Digit5':
         if (typeof this.changeActiveBlockCallback === 'function') {
           const optionKey = Number(event.key);
           this.changeActiveBlockCallback(optionKey);

@@ -8,7 +8,7 @@
 - [x] Enable debug based on URL params — Dev mode toggle
 - [x] Physics system — Basic collision and movement physics
 - [x] Infinite world — Chunk streaming and unloading
-- [ ] Terraforming — Modify terrain in real-time
+- [x] Terraforming — Modify terrain in real-time
 - [ ] Trees — Procedural tree generation
 - [ ] Bushes — Small vegetation details
 - [ ] TPP camera - Third-person perspective camera controls
