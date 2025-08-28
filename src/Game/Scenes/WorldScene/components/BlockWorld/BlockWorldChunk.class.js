@@ -210,6 +210,9 @@ export default class BlockWorldChunk extends THREE.Group {
 
   getBlock(x, y, z) {
     if (this.inBounds(x, y, z)) {
+      if (!this.data || !this.data[x] || !this.data[x][y]) {
+        return null;
+      }
       return this.data[x][y][z];
     } else {
       return null;
@@ -220,14 +223,10 @@ export default class BlockWorldChunk extends THREE.Group {
   addBlockInstance(x, y, z) {
     const block = this.getBlock(x, y, z);
     if (!block || block.id === blocks.empty.id) {
-      console.warn(`addBlockInstance: no block at (${x}, ${y}, ${z})`);
       return;
     }
 
     if (block.instanceId !== null) {
-      console.warn(
-        `addBlockInstance: block at (${x}, ${y}, ${z}) already has instance`
-      );
       return;
     }
 
@@ -238,14 +237,10 @@ export default class BlockWorldChunk extends THREE.Group {
     );
 
     if (!mesh) {
-      console.warn(`addBlockInstance: no mesh found for block ID: ${block.id}`);
       return;
     }
 
     if (mesh.count >= mesh.instanceMatrix.count) {
-      console.warn(
-        `addBlockInstance: mesh capacity reached for block ${block.id}`
-      );
       return;
     }
 
@@ -263,7 +258,6 @@ export default class BlockWorldChunk extends THREE.Group {
   deleteBlockInstance(x, y, z) {
     const block = this.getBlock(x, y, z);
     if (!block || block.instanceId == null) {
-      console.warn(`deleteBlockInstance: no instance at (${x}, ${y}, ${z})`);
       return;
     }
 
@@ -274,7 +268,6 @@ export default class BlockWorldChunk extends THREE.Group {
     );
 
     if (!mesh) {
-      console.warn(`deleteBlockInstance: no mesh for block ${block.id}`);
       this.setBlockInstanceId(x, y, z, null);
       this.setBlockId(x, y, z, blocks.empty.id);
       return;
@@ -284,9 +277,6 @@ export default class BlockWorldChunk extends THREE.Group {
     const lastIndex = mesh.count - 1;
 
     if (lastIndex < 0 || instanceId > lastIndex) {
-      console.warn(
-        `deleteBlockInstance: invalid instance index ${instanceId}, mesh count: ${mesh.count}`
-      );
       this.setBlockInstanceId(x, y, z, null);
       this.setBlockId(x, y, z, blocks.empty.id);
       return;
@@ -327,18 +317,93 @@ export default class BlockWorldChunk extends THREE.Group {
 
     // Clear the deleted block's data
     this.setBlockInstanceId(x, y, z, null);
-    this.setBlockId(x, y, z, blocks.empty.id);
   }
 
   removeBlock(x, y, z) {
     const block = this.getBlock(x, y, z);
     if (block && block.id !== blocks.empty) {
       this.deleteBlockInstance(x, y, z);
+      this.setBlockId(x, y, z, blocks.empty.id);
+    }
+  }
+
+  expandHeight(newHeight) {
+    if (newHeight <= this.BLOCK_CHUNK_CONFIG.height) return;
+
+    const oldHeight = this.BLOCK_CHUNK_CONFIG.height;
+
+    // First, expand the data array BEFORE updating the height config
+    for (let x = 0; x < this.BLOCK_CHUNK_CONFIG.width; x++) {
+      // Ensure this.data[x] exists and has enough y-levels
+      if (!this.data[x]) {
+        this.data[x] = [];
+      }
+
+      while (this.data[x].length < newHeight) {
+        const row = [];
+        for (let z = 0; z < this.BLOCK_CHUNK_CONFIG.depth; z++) {
+          row.push({
+            id: blocks.empty.id,
+            instanceId: null,
+          });
+        }
+        this.data[x].push(row);
+      }
+    }
+
+    // Only update the height config AFTER the data structure is ready
+    this.BLOCK_CHUNK_CONFIG.height = newHeight;
+
+    // Only regenerate if we actually need more instance capacity
+    const currentMaxCount =
+      this.children.length > 0 ? this.children[0].instanceMatrix.count : 0;
+    const neededCount =
+      this.BLOCK_CHUNK_CONFIG.width * newHeight * this.BLOCK_CHUNK_CONFIG.depth;
+
+    if (neededCount > currentMaxCount) {
+      this.generateMeshInstances();
+    }
+  }
+
+  addBlock(x, y, z, blockId) {
+    if (y >= this.BLOCK_CHUNK_CONFIG.height) {
+      this.expandHeight(y + 10);
+    }
+
+    const existingBlock = this.getBlock(x, y, z);
+
+    // Allow block placement if:
+    // 1. existingBlock is null (position doesn't exist yet - we'll create it)
+    // 2. existingBlock exists and is empty
+    if (existingBlock === null || existingBlock.id === blocks.empty.id) {
+      this.setBlockId(x, y, z, blockId);
+      this.addBlockInstance(x, y, z);
     }
   }
 
   setBlockId(x, y, z, id) {
     if (this.inBounds(x, y, z)) {
+      // Ensure the data structure exists before setting
+      if (!this.data[x]) {
+        this.data[x] = [];
+      }
+      if (!this.data[x][y]) {
+        this.data[x][y] = [];
+        // Fill the row with empty blocks
+        for (let zi = 0; zi < this.BLOCK_CHUNK_CONFIG.depth; zi++) {
+          this.data[x][y].push({
+            id: blocks.empty.id,
+            instanceId: null,
+          });
+        }
+      }
+      if (!this.data[x][y][z]) {
+        this.data[x][y][z] = {
+          id: blocks.empty.id,
+          instanceId: null,
+        };
+      }
+
       this.data[x][y][z].id = id;
     }
   }

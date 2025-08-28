@@ -8,6 +8,7 @@ import DebugGUI from './Utils/DebugGUI';
 import { getThemeConfig } from './Utils/ThemeManager.class';
 import PhysicsSystem from './Systems/PhysicsSystem.class';
 import Mouse from './Input/Mouse.class';
+import { blocks } from './Data/Blocks';
 
 export default class Game {
   constructor(canvas, resources, isDebugMode) {
@@ -93,9 +94,18 @@ export default class Game {
   }
 
   handleMouseDown(event) {
-    if (this.gameControls.isLocked && this.player.selectedCoords) {
+    if (
+      this.gameControls.isLocked &&
+      this.player.selectedCoords &&
+      !this.isPaused
+    ) {
       const { x, y, z } = this.player.selectedCoords;
-      this.world.blockWorld.removeBlock(x, y, z);
+      if (this.player.activeBlockId === blocks.empty.id) {
+        this.world.blockWorld.removeBlock(x, y, z);
+      } else {
+        const blockType = this.player.activeBlockId;
+        this.world.blockWorld.addBlock(x, y, z, blockType);
+      }
     }
   }
 

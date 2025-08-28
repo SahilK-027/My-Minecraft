@@ -4,6 +4,7 @@ export default class KeyboardControls {
   constructor({
     controls = null,
     resetCallback = null,
+    changeActiveBlockCallback = null,
     // TODO: for winter player can slide so damping will reduce also manipulate player speed accordingly
     damping = 10,
     deadzone = 1e-3,
@@ -13,6 +14,7 @@ export default class KeyboardControls {
 
     this.controls = controls;
     this.resetCallback = resetCallback;
+    this.changeActiveBlockCallback = changeActiveBlockCallback;
 
     this.input = new THREE.Vector3(0, 0, 0);
     this.target = new THREE.Vector3(0, 0, 0);
@@ -37,6 +39,17 @@ export default class KeyboardControls {
     }
 
     switch (event.code) {
+      case 'Digit0':
+      case 'Digit1':
+      case 'Digit2':
+      case 'Digit3':
+      case 'Digit4':
+      case 'Digit5':
+        if (typeof this.changeActiveBlockCallback === 'function') {
+          const optionKey = Number(event.key);
+          this.changeActiveBlockCallback(optionKey);
+        }
+        break;
       case 'KeyA':
         this.target.x = -1;
         break;

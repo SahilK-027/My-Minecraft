@@ -14,6 +14,7 @@ export default class BlockWorld extends THREE.Group {
       offset: 0.7,
     },
     minMiningDepth: 0,
+    maxBuildHeight: 32,
   };
 
   BLOCK_CHUNK_CONFIG = {
@@ -21,6 +22,8 @@ export default class BlockWorld extends THREE.Group {
     height: 16,
     depth: 32,
   };
+
+  DRAW_DISTANCE = 3;
 
   GRASS_SEASONS_CONFIG = {
     summer: {
@@ -41,8 +44,6 @@ export default class BlockWorld extends THREE.Group {
       variationTexture: 'winterGrass',
     },
   };
-
-  DRAW_DISTANCE = 3;
 
   ASYNC_LOADING = true;
 
@@ -360,6 +361,33 @@ export default class BlockWorld extends THREE.Group {
     this.clear();
   }
 
+  addBlock(x, y, z, blockId) {
+    if (y > this.WORLD_PARAMS.maxBuildHeight) {
+      window.alert('Cannot build above height limit');
+      return false;
+    }
+
+    const coords = this.worldToChunkCoordinate(x, y, z);
+    const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+    if (chunk) {
+      chunk.addBlock(coords.block.x, coords.block.y, coords.block.z, blockId);
+
+      const neighbors = [
+        { x: x + 1, y: y, z: z }, // right
+        { x: x - 1, y: y, z: z }, // left
+        { x: x, y: y + 1, z: z }, // up
+        { x: x, y: y - 1, z: z }, // down
+        { x: x, y: y, z: z + 1 }, // forward
+        { x: x, y: y, z: z - 1 }, // back
+      ];
+
+      for (const neighbor of neighbors) {
+        this.hideBlock(neighbor.x, neighbor.y, neighbor.z);
+      }
+    }
+  }
+
   removeBlock(x, y, z) {
     if (y <= this.WORLD_PARAMS.minMiningDepth) {
       window.alert('Cannot mine beyond this depth!');
@@ -372,13 +400,17 @@ export default class BlockWorld extends THREE.Group {
     if (chunk) {
       chunk.removeBlock(coords.block.x, coords.block.y, coords.block.z);
 
-      for (let dx = -1; dx <= 1; dx++) {
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dz = -1; dz <= 1; dz++) {
-            if (dx === 0 && dy === 0 && dz === 0) continue;
-            this.revealBlock(x + dx, y + dy, z + dz);
-          }
-        }
+      const neighbors = [
+        { x: x + 1, y: y, z: z }, // right
+        { x: x - 1, y: y, z: z }, // left
+        { x: x, y: y + 1, z: z }, // up
+        { x: x, y: y - 1, z: z }, // down
+        { x: x, y: y, z: z + 1 }, // forward
+        { x: x, y: y, z: z - 1 }, // back
+      ];
+
+      for (const neighbor of neighbors) {
+        this.revealBlock(neighbor.x, neighbor.y, neighbor.z);
       }
     }
   }
@@ -388,9 +420,6 @@ export default class BlockWorld extends THREE.Group {
     const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
 
     if (!chunk || !chunk.loaded) {
-      console.warn(
-        `Cannot remove block: chunk not found or not loaded at (${coords.chunk.x}, ${coords.chunk.z})`
-      );
       return;
     }
 
@@ -400,7 +429,6 @@ export default class BlockWorld extends THREE.Group {
       coords.block.z
     );
     if (!block || block.id === blocks.empty.id) {
-      console.warn(`Cannot remove block: no block at (${x}, ${y}, ${z})`);
       return;
     }
 
@@ -411,7 +439,39 @@ export default class BlockWorld extends THREE.Group {
 
     // Block should be visible now, add instance if it doesn't have one
     if (block.instanceId === null) {
+      console.log(
+        `added ${coords.block.x}, ${coords.block.y}, ${coords.block.z}`
+      );
       chunk.addBlockInstance(coords.block.x, coords.block.y, coords.block.z);
+    }
+  }
+
+  hideBlock(x, y, z) {
+    const coords = this.worldToChunkCoordinate(x, y, z);
+    const chunk = this.getChunk(coords.chunk.x, coords.chunk.z);
+
+    if (!chunk || !chunk.loaded) return;
+
+    const block = chunk.getBlock(
+      coords.block.x,
+      coords.block.y,
+      coords.block.z
+    );
+    if (!block || block.id === blocks.empty.id) return;
+
+    // If the block is still visible, don't hide it
+    if (
+      !chunk.isBlockObscured(coords.block.x, coords.block.y, coords.block.z)
+    ) {
+      return;
+    }
+
+    // Block is obscured now — remove its instance if it has one
+    if (block.instanceId !== null) {
+      console.log(
+        `hide ${coords.block.x}, ${coords.block.y}, ${coords.block.z}`
+      );
+      chunk.deleteBlockInstance(coords.block.x, coords.block.y, coords.block.z);
     }
   }
 

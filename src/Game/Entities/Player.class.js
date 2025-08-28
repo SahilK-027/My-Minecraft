@@ -4,6 +4,7 @@ import DebugGUI from '../Utils/DebugGUI';
 import KeyboardControls from '../Input/Keyboard.class';
 import selectionMaterialVertShader from './shaders/selection-mat-vertex.glsl';
 import selectionMaterialFragShader from './shaders/selection-mat-fragment.glsl';
+import { blocks } from '../Data/Blocks';
 
 const CENTER_SCREEN = new THREE.Vector2();
 
@@ -39,6 +40,7 @@ export default class Player {
     3
   );
   selectedCoords = null;
+  activeBlockId = blocks.grass.id;
 
   constructor(FPPCamera, controls) {
     this.FPPCamera = FPPCamera;
@@ -60,6 +62,12 @@ export default class Player {
         this.#sprintTimer = 0;
         this.#cooldownTimer = 0;
         this.#isInCooldown = false;
+      },
+      changeActiveBlockCallback: (optionKey) => {
+        if (this.controls.isLocked) {
+          this.activeBlockId = optionKey;
+          console.log(`Active block = ${this.activeBlockId}`);
+        }
       },
     });
 
@@ -197,6 +205,10 @@ export default class Player {
       // This will extract the transformations (here in case position) from blockMatrix transformationMatrix
       this.selectedCoords = chunk.position.clone();
       this.selectedCoords.applyMatrix4(blockMatrix);
+
+      if (this.activeBlockId !== blocks.empty.id) {
+        this.selectedCoords.add(intersection.normal);
+      }
 
       this.selectionHelper.position.copy(this.selectedCoords);
       this.selectionHelper.visible = true;
