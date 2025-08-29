@@ -9,7 +9,7 @@ import { blocks } from '../Data/Blocks';
 const CENTER_SCREEN = new THREE.Vector2();
 
 export default class Player {
-  maxSpeed = 30.0;
+  maxSpeed = 3.0;
   radius = 0.5;
   height = 1.75;
   jumpSpeed = 8.5;
@@ -57,7 +57,7 @@ export default class Player {
     this.keyboard = new KeyboardControls({
       controls: this.controls,
       resetCallback: () => {
-        this.playerPosition.set(12.6, 38.25, -12.75);
+        this.playerPosition.set(15, 33.25, 0);
         this.velocity.set(0, 0, 0);
         this.#sprintTimer = 0;
         this.#cooldownTimer = 0;
@@ -71,12 +71,13 @@ export default class Player {
       },
     });
 
-    this.playerPosition.set(12.6, 38.25, -12.75);
+    this.playerPosition.set(15, 33.25, 0);
     this.scene.add(this.FPPCamera);
 
     this.createSelectionHelper();
 
     if (this.isDebugMode) {
+      this.maxSpeed = 10.0;
       this.boundsHelper = new THREE.Mesh(
         new THREE.CylinderGeometry(this.radius, this.radius, this.height, 16),
         new THREE.MeshBasicMaterial({ wireframe: true, color: 'red' })

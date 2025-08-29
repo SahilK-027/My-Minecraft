@@ -8,10 +8,10 @@ import { DataStore } from '../../../../Utils/Datastore.class';
 
 export default class BlockWorld extends THREE.Group {
   WORLD_PARAMS = {
-    seed: 27,
+    seed: 0,
     terrain: {
       scale: 70,
-      magnitude: 0.2,
+      magnitude: 0.227,
       offset: 0.7,
     },
     minMiningDepth: 0,

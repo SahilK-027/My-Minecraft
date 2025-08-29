@@ -18,7 +18,7 @@ export default class Lighting {
 
     this.shadowCameraSize = 100;
     this.lastShadowUpdatePos = new THREE.Vector3();
-    this.shadowUpdateDistance = 16;
+    this.shadowUpdateDistance = 20;
 
     this.setThreePointLights();
     if (this.isDebugMode) {
@@ -28,7 +28,7 @@ export default class Lighting {
 
   setThreePointLights() {
     // ---------- KEY LIGHT (Sun) - FIXED FOR STABLE SHADOWS ----------
-    this.keyLight = new THREE.DirectionalLight(0xfff1d6, 2.0);
+    this.keyLight = new THREE.DirectionalLight(0xfff1d6, 1.5);
     this.keyLight.position.set(-120, 52, -8);
     this.keyLight.castShadow = true;
 
@@ -39,8 +39,8 @@ export default class Lighting {
     this.keyLight.shadow.camera.top = this.shadowCameraSize;
     this.keyLight.shadow.camera.near = 1;
     this.keyLight.shadow.camera.far = 300;
-    this.keyLight.shadow.bias = -0.0005;
-    this.keyLight.shadow.normalBias = 0.02;
+    this.keyLight.shadow.bias = -0.00319;
+    this.keyLight.shadow.normalBias = 0;
     this.keyLight.shadow.radius = 1;
     this.keyLight.shadow.autoUpdate = false;
 
@@ -85,7 +85,6 @@ export default class Lighting {
     if (!this.player || !playerPos) return;
 
     this.keyLight.target.position.copy(playerPos);
-
     this.fillLight.position.copy(playerPos).add(this.originalFillOffset);
     this.rimLight.position.copy(playerPos).add(this.originalRimOffset);
 
@@ -99,11 +98,24 @@ export default class Lighting {
         Math.round(playerPos.z / 5) * 5
       );
 
-      this.keyLight.shadow.camera.position.copy(roundedPos);
+      // move the light to sit at the snapped position + the original offset
+      const lightPos = roundedPos.clone().add(this.originalKeyOffset);
+      this.keyLight.position.copy(lightPos);
+
+      // keep the shadow camera aligned with the light
+      this.keyLight.shadow.camera.position.copy(lightPos);
+      // ensure the shadow camera is oriented toward the target (player)
+      this.keyLight.shadow.camera.lookAt(this.keyLight.target.position);
+
+      // update camera matrices
       this.keyLight.shadow.camera.updateProjectionMatrix();
+      this.keyLight.shadow.camera.updateMatrixWorld();
+
+      // request a shadow map update
       this.keyLight.shadow.needsUpdate = true;
 
-      this.lastShadowUpdatePos.copy(playerPos);
+      // copy the roundedPos (not raw playerPos) so the next threshold calculation is consistent
+      this.lastShadowUpdatePos.copy(roundedPos);
     }
   }
 
@@ -181,7 +193,7 @@ export default class Lighting {
       this.debug.add(
         this.keyLight.shadow,
         'bias',
-        { min: -0.001, max: 0.001, step: 0.00001, label: 'Shadow Bias' },
+        { min: -0.01, max: 0.001, step: 0.00001, label: 'Shadow Bias' },
         'Light Folder'
       );
       this.debug.add(
