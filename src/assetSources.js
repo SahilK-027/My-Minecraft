@@ -94,6 +94,11 @@ const ASSETS = [
     path: ['/assets/textures/blocks/cloud/cloud.png'],
     type: 'texture',
   },
+  {
+    id: 'bubbleTexture',
+    path: ['/assets/textures/bubble.png'],
+    type: 'texture',
+  },
 ];
 
 export default ASSETS;

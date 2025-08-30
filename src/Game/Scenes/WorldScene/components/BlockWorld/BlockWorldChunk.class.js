@@ -285,7 +285,7 @@ export default class BlockWorldChunk extends THREE.Group {
 
                 if (this.getBlock(wx, wy, wz)?.id !== blocks.empty.id) continue;
 
-                if (randN > canopyCfg.density) {
+                if (randN * Math.random() > canopyCfg.density) {
                   this.setBlockId(wx, wy, wz, blocks.leaves.id);
                 }
               }
@@ -370,7 +370,7 @@ export default class BlockWorldChunk extends THREE.Group {
     waterMesh.rotation.x = -Math.PI / 2;
     waterMesh.position.set(
       width / 2,
-      this.WORLD_PARAMS.terrain.waterOffset - 0.4,
+      this.WORLD_PARAMS.terrain.waterOffset - 0.55,
       depth / 2
     );
     waterMesh.layers.set(1);

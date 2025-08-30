@@ -28,7 +28,7 @@ export default class BlockWorld extends THREE.Group {
           min: 2,
           max: 4,
         },
-        density: 0.55,
+        density: 0.4,
       },
       minDistance: 10,
     },

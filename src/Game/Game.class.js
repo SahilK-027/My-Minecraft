@@ -9,6 +9,7 @@ import { getThemeConfig } from './Utils/ThemeManager.class';
 import PhysicsSystem from './Systems/PhysicsSystem.class';
 import Mouse from './Input/Mouse.class';
 import { blocks } from './Data/Blocks';
+import { UnderwaterEffect } from './Effects/UnderwaterEffect.class';
 
 export default class Game {
   constructor(canvas, resources, isDebugMode) {
@@ -42,6 +43,7 @@ export default class Game {
     this.camera = this.cameraInstance.orbitCamera;
     this.renderer = new Renderer();
     this.needsRenderAfterResize = false;
+    this.underwaterEffect = new UnderwaterEffect(this);
 
     // Game states
     this.isPaused = false;
@@ -60,6 +62,7 @@ export default class Game {
       this._setupGameplayEventListeners();
       this.initFog();
     }
+    this.underwaterEffect.initialize();
 
     if (this.isDebugMode) {
       document.getElementById('menu').style.display = 'none';
@@ -169,6 +172,18 @@ export default class Game {
       this.cameraInstance.update();
       this.world.update(delta);
       this.physics.update(delta, this.player, this.world.blockWorld);
+
+      if (
+        !this.isDebugMode &&
+        this.underwaterEffect &&
+        this.player &&
+        this.world.blockWorld
+      ) {
+        const playerPosition = this.player.playerPosition;
+        const waterLevel =
+          this.world.blockWorld.WORLD_PARAMS.terrain.waterOffset;
+        this.underwaterEffect.update(playerPosition, waterLevel, delta);
+      }
     } else {
       // When paused, only update camera
       this.cameraInstance.update();
@@ -375,6 +390,11 @@ export default class Game {
       try {
         this.debug.gui.destroy();
       } catch (e) {}
+    }
+
+    if (this.underwaterEffect) {
+      this.underwaterEffect.destroy();
+      this.underwaterEffect = null;
     }
 
     // Null references

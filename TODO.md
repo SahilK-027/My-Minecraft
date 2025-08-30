@@ -11,7 +11,8 @@
 - [x] Terraforming — Modify terrain in real-time
 - [x] Trees — Procedural cloud generation
 - [x] Clouds — Procedural cloud generation
-- [ ] Water — Simple water generation
+- [x] Water — Simple water generation
+- [x] Under water — Under water effects
 - [ ] Flowering Trees - Implement leaf variety in trees
 - [ ] Realistic Water - Shader based water rendering
 - [ ] Bushes — Small vegetation details
