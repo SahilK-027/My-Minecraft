@@ -16,6 +16,22 @@ export default class BlockWorld extends THREE.Group {
     },
     minMiningDepth: 0,
     maxBuildHeight: 32,
+
+    trees: {
+      frequency: 0.004,
+      trunkHeight: {
+        min: 3,
+        max: 6,
+      },
+      canopy: {
+        size: {
+          min: 2,
+          max: 4,
+        },
+        density: 0.55,
+      },
+      minDistance: 10,
+    },
   };
 
   BLOCK_CHUNK_CONFIG = {
@@ -152,6 +168,46 @@ export default class BlockWorld extends THREE.Group {
           left: 'goldOre',
         },
       },
+      [blocks.tree.id]: {
+        faces: {
+          front: 'treeSide',
+          back: 'treeSide',
+          top: 'treeTop',
+          bottom: 'treeTop',
+          right: 'treeSide',
+          left: 'treeSide',
+        },
+      },
+      [blocks.sand.id]: {
+        faces: {
+          front: 'sand',
+          back: 'sand',
+          top: 'sand',
+          bottom: 'sand',
+          right: 'sand',
+          left: 'sand',
+        },
+      },
+      [blocks.leaves.id]: {
+        faces: {
+          front: 'leaves',
+          back: 'leaves',
+          top: 'leaves',
+          bottom: 'leaves',
+          right: 'leaves',
+          left: 'leaves',
+        },
+      },
+      [blocks.cloud.id]: {
+        faces: {
+          front: 'cloud',
+          back: 'cloud',
+          top: 'cloud',
+          bottom: 'cloud',
+          right: 'cloud',
+          left: 'cloud',
+        },
+      },
     };
 
     let grassTextureTopToRender, grassTextureSideToRender;
@@ -181,6 +237,11 @@ export default class BlockWorld extends THREE.Group {
     this.atlas.addTexture('coalOre', this.textureResources.coalOreTexture);
     this.atlas.addTexture('ironOre', this.textureResources.ironOreTexture);
     this.atlas.addTexture('goldOre', this.textureResources.goldOreTexture);
+    this.atlas.addTexture('treeSide', this.textureResources.treeSideTexture);
+    this.atlas.addTexture('treeTop', this.textureResources.treeTopTexture);
+    this.atlas.addTexture('sand', this.textureResources.sandTexture);
+    this.atlas.addTexture('leaves', this.textureResources.leavesTexture);
+    this.atlas.addTexture('cloud', this.textureResources.cloudTexture);
 
     this.atlasTexture = this.atlas.generateAtlasTexture();
 
@@ -475,9 +536,6 @@ export default class BlockWorld extends THREE.Group {
 
     // Block is obscured now — remove its instance if it has one
     if (block.instanceId !== null) {
-      console.log(
-        `hide ${coords.block.x}, ${coords.block.y}, ${coords.block.z}`
-      );
       chunk.deleteBlockInstance(coords.block.x, coords.block.y, coords.block.z);
     }
   }
@@ -565,6 +623,106 @@ export default class BlockWorld extends THREE.Group {
         max: 1,
         step: 0.001,
         label: 'Magnitude',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+
+    this.debug.add(
+      this.WORLD_PARAMS.trees,
+      'frequency',
+      {
+        min: 0,
+        max: 1,
+        step: 0.0001,
+        label: 'Tree Frequency',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+
+    this.debug.add(
+      this.WORLD_PARAMS.trees,
+      'minDistance',
+      {
+        min: 0,
+        max: 100,
+        step: 1,
+        label: 'Tree separation',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+    this.debug.add(
+      this.WORLD_PARAMS.trees.trunkHeight,
+      'min',
+      {
+        min: 0,
+        max: 10,
+        step: 1,
+        label: 'Tree trunkHeight Min',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+    this.debug.add(
+      this.WORLD_PARAMS.trees.trunkHeight,
+      'max',
+      {
+        min: 0,
+        max: 10,
+        step: 1,
+        label: 'Tree trunkHeight Max',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+    this.debug.add(
+      this.WORLD_PARAMS.trees.canopy.size,
+      'min',
+      {
+        min: 0,
+        max: 10,
+        step: 1,
+        label: 'Tree canopy rad min',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+    this.debug.add(
+      this.WORLD_PARAMS.trees.canopy.size,
+      'max',
+      {
+        min: 0,
+        max: 10,
+        step: 1,
+        label: 'Tree canopy rad max',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+    this.debug.add(
+      this.WORLD_PARAMS.trees.canopy,
+      'density',
+      {
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: 'Tree canopy density',
         onChange: () => {
           this.generateBlockWorld();
         },

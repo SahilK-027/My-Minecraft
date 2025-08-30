@@ -35,6 +35,7 @@ export default class BlockWorldChunk extends THREE.Group {
   initResources() {
     this.atlasMaterial = new THREE.MeshToonMaterial({
       map: this.atlasTexture,
+      alphaTest: 0.1,
     });
 
     this.blockGeometries = BlockGeometry.createBlockGeometries(
@@ -51,6 +52,7 @@ export default class BlockWorldChunk extends THREE.Group {
     this.initBlockWorldTerrain();
     this.generateResources(randomNumberGenerator);
     this.generateTerrain(randomNumberGenerator);
+    this.generateTrees(randomNumberGenerator);
     this.loadPlayerChanges();
     this.generateMeshInstances();
 
@@ -114,7 +116,7 @@ export default class BlockWorldChunk extends THREE.Group {
           0,
           Math.min(height, this.BLOCK_CHUNK_CONFIG.height - 1)
         );
-        height -= 2;
+        height -= 3;
 
         for (let y = 0; y < this.BLOCK_CHUNK_CONFIG.height; y++) {
           const cell = this.getBlock(x, y, z);
@@ -141,6 +143,91 @@ export default class BlockWorldChunk extends THREE.Group {
             // above the surface remains empty
             this.setBlockId(x, y, z, blocks.empty.id);
           }
+        }
+      }
+    }
+  }
+
+  generateTrees(rng) {
+    const simplex = new SimplexNoise(rng);
+
+    const canopySize = this.WORLD_PARAMS.trees.canopy.size.max;
+    const { width, depth, height } = this.BLOCK_CHUNK_CONFIG;
+    const treesCfg = this.WORLD_PARAMS.trees;
+    const canopyCfg = treesCfg.canopy;
+    const trunkCfg = treesCfg;
+
+    const isTreeNearby = (cx, cz, minDist) => {
+      if (!minDist || minDist <= 0) return false;
+      const r2 = minDist * minDist;
+      const startX = Math.floor(cx - minDist);
+      const endX = Math.floor(cx + minDist);
+      const startZ = Math.floor(cz - minDist);
+      const endZ = Math.floor(cz + minDist);
+
+      for (let sx = startX; sx <= endX; sx++) {
+        const dx = sx - cx;
+        const dx2 = dx * dx;
+        for (let sz = startZ; sz <= endZ; sz++) {
+          const dz = sz - cz;
+          if (dx2 + dz * dz > r2) continue;
+          for (let sy = 0; sy < height; sy++) {
+            if (this.getBlock(sx, sy, sz)?.id === blocks.tree.id) return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    const minDistance = treesCfg.minDistance;
+
+    for (let baseX = canopySize; baseX < width - canopySize; baseX++) {
+      for (let baseZ = canopySize; baseZ < depth - canopySize; baseZ++) {
+        const n =
+          simplex.noise(this.position.x + baseX, this.position.z + baseZ) *
+            0.5 +
+          0.5;
+
+        if (n < 1 - treesCfg.frequency) continue;
+
+        for (let y = height - 1; y--; y >= 0) {
+          if (this.getBlock(baseX, y, baseZ).id !== blocks.grass.id) continue;
+          const baseY = y + 1;
+
+          if (isTreeNearby(baseX, baseZ, minDistance)) break;
+
+          const minH = trunkCfg.trunkHeight.min;
+          const maxH = trunkCfg.trunkHeight.max;
+          const trunkHeight = Math.round(rng.random() * (maxH - minH)) + minH;
+          const topY = baseY + trunkHeight;
+
+          for (let trunkY = baseY; trunkY <= topY; trunkY++) {
+            this.setBlockId(baseX, trunkY, baseZ, blocks.tree.id);
+          }
+
+          const minR = canopyCfg.size.min;
+          const maxR = canopyCfg.size.max;
+          const R = Math.round(rng.random() * (maxR - minR)) + minR;
+
+          for (let dx = -R; dx <= R; dx++) {
+            for (let dy = -R; dy <= R; dy++) {
+              for (let dz = -R; dz <= R; dz++) {
+                if (dx * dx + dy * dy + dz * dz > R * R) continue;
+
+                const wx = baseX + dx;
+                const wy = topY + dy;
+                const wz = baseZ + dz;
+
+                if (this.getBlock(wx, wy, wz)?.id !== blocks.empty.id) continue;
+
+                if (rng.random() > canopyCfg.density) {
+                  this.setBlockId(wx, wy, wz, blocks.leaves.id);
+                }
+              }
+            }
+          }
+
+          break;
         }
       }
     }
@@ -206,6 +293,7 @@ export default class BlockWorldChunk extends THREE.Group {
         mesh.count = 0;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+        mesh.frustumCulled = false;
 
         meshes[blockType.id] = mesh;
       });

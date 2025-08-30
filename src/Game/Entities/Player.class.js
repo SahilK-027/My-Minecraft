@@ -66,7 +66,6 @@ export default class Player {
       changeActiveBlockCallback: (optionKey) => {
         if (this.controls.isLocked) {
           this.activeBlockId = optionKey;
-          console.log(`Active block = ${this.activeBlockId}`);
         }
       },
     });

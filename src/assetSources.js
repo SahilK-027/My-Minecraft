@@ -69,6 +69,31 @@ const ASSETS = [
     path: ['/assets/textures/blocks/gold/gold_ore.png'],
     type: 'texture',
   },
+  {
+    id: 'treeTopTexture',
+    path: ['/assets/textures/blocks/tree/jungle_log_top_1.png'],
+    type: 'texture',
+  },
+  {
+    id: 'treeSideTexture',
+    path: ['/assets/textures/blocks/tree/jungle_log_1.png'],
+    type: 'texture',
+  },
+  {
+    id: 'sandTexture',
+    path: ['/assets/textures/blocks/sand/sand_1.png'],
+    type: 'texture',
+  },
+  {
+    id: 'leavesTexture',
+    path: ['/assets/textures/blocks/leaves/azalea_leaves_2.png'],
+    type: 'texture',
+  },
+  {
+    id: 'cloudTexture',
+    path: ['/assets/textures/blocks/cloud/cloud.png'],
+    type: 'texture',
+  },
 ];
 
 export default ASSETS;
