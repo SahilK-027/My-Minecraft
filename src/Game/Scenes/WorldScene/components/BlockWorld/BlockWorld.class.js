@@ -13,6 +13,7 @@ export default class BlockWorld extends THREE.Group {
       scale: 64,
       magnitude: 0.2,
       offset: 0.45,
+      waterOffset: 10,
     },
     minMiningDepth: 0,
     maxBuildHeight: 32,

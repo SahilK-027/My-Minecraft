@@ -24,6 +24,7 @@ export default class Camera {
     const aspectRatio = this.sizes.width / this.sizes.height;
     this.orbitCamera = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
     this.orbitCamera.position.set(-15, 23.25, 2);
+    this.orbitCamera.layers.enable(1);
     this.scene.add(this.orbitCamera);
   }
 
@@ -31,6 +32,7 @@ export default class Camera {
     const aspectRatio = this.sizes.width / this.sizes.height;
     this.FPPCamera = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
     this.FPPCamera.position.set(-18, 14, 23);
+    this.FPPCamera.layers.enable(1);
     this.scene.add(this.FPPCamera);
   }
 

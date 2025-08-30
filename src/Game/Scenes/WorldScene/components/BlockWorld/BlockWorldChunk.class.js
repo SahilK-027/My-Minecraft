@@ -101,7 +101,11 @@ export default class BlockWorldChunk extends THREE.Group {
 
   generateTerrain(randomNumberGenerator) {
     const simplex = new SimplexNoise(randomNumberGenerator);
+
+    // First pass: determine terrain heights
+    const terrainHeights = [];
     for (let x = 0; x < this.BLOCK_CHUNK_CONFIG.width; x++) {
+      terrainHeights[x] = [];
       for (let z = 0; z < this.BLOCK_CHUNK_CONFIG.depth; z++) {
         const value = simplex.noise(
           (this.position.x + x) / this.WORLD_PARAMS.terrain.scale,
@@ -119,29 +123,83 @@ export default class BlockWorldChunk extends THREE.Group {
         );
         height -= 3;
 
+        terrainHeights[x][z] = height;
+      }
+    }
+
+    // Helper function to check if position is near water
+    const isNearWater = (x, z, radius = 3) => {
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dz = -radius; dz <= radius; dz++) {
+          const checkX = x + dx;
+          const checkZ = z + dz;
+
+          // Check bounds
+          if (
+            checkX >= 0 &&
+            checkX < this.BLOCK_CHUNK_CONFIG.width &&
+            checkZ >= 0 &&
+            checkZ < this.BLOCK_CHUNK_CONFIG.depth
+          ) {
+            const terrainHeight = terrainHeights[checkX][checkZ];
+
+            // If terrain is below water level, there's water here
+            if (terrainHeight < this.WORLD_PARAMS.terrain.waterOffset) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    };
+
+    // Second pass: place blocks
+    for (let x = 0; x < this.BLOCK_CHUNK_CONFIG.width; x++) {
+      for (let z = 0; z < this.BLOCK_CHUNK_CONFIG.depth; z++) {
+        const height = terrainHeights[x][z];
+        const nearWater = isNearWater(x, z);
+
         for (let y = 0; y < this.BLOCK_CHUNK_CONFIG.height; y++) {
           const cell = this.getBlock(x, y, z);
           const currentId = cell ? cell.id : blocks.empty.id;
 
           if (y === 0) {
+            // Bedrock at bottom
             this.setBlockId(x, y, z, blocks.bedrock.id);
           } else if (y < height && currentId === blocks.empty.id) {
-            // fill interior with dirt only if it wasn't already set by resources
-            this.setBlockId(x, y, z, blocks.dirt.id);
+            // Interior blocks
+            if (nearWater && y <= this.WORLD_PARAMS.terrain.waterOffset) {
+              // Use sand only if near water AND below/at water level
+              this.setBlockId(x, y, z, blocks.sand.id);
+            } else {
+              // Use dirt everywhere else
+              this.setBlockId(x, y, z, blocks.dirt.id);
+            }
           } else if (y === height) {
-            // On surface grass
-            const useVariation =
-              Math.random() > this.seasonGrass.variationThreshold &&
-              y > this.seasonGrass.variationHeight;
-
-            this.setBlockId(
-              x,
-              y,
-              z,
-              useVariation ? blocks.grassVariation.id : blocks.grass.id
-            );
+            // Surface block
+            if (height < this.WORLD_PARAMS.terrain.waterOffset) {
+              // Surface is underwater - use sand
+              this.setBlockId(x, y, z, blocks.sand.id);
+            } else if (
+              nearWater &&
+              y <= this.WORLD_PARAMS.terrain.waterOffset + 2
+            ) {
+              // Surface near water and close to water level - use sand (beach)
+              this.setBlockId(x, y, z, blocks.sand.id);
+            } else {
+              // Regular surface - use grass
+              const useVariation =
+                Math.random() > this.seasonGrass.variationThreshold &&
+                y > this.seasonGrass.variationHeight;
+              this.setBlockId(
+                x,
+                y,
+                z,
+                useVariation ? blocks.grassVariation.id : blocks.grass.id
+              );
+            }
           } else if (y > height) {
-            // above the surface remains empty
+            // Above surface - keep empty
             this.setBlockId(x, y, z, blocks.empty.id);
           }
         }
@@ -193,7 +251,12 @@ export default class BlockWorldChunk extends THREE.Group {
         if (n < 1 - treesCfg.frequency) continue;
 
         for (let y = height - 1; y--; y >= 0) {
-          if (this.getBlock(baseX, y, baseZ).id !== blocks.grass.id) continue;
+          const currBlockId = this.getBlock(baseX, y, baseZ).id;
+          if (
+            currBlockId !== blocks.grass.id &&
+            currBlockId !== blocks.grassVariation.id
+          )
+            continue;
           const baseY = y + 1;
 
           if (isTreeNearby(baseX, baseZ, minDistance)) break;
@@ -290,8 +353,35 @@ export default class BlockWorldChunk extends THREE.Group {
     this.clear();
   }
 
+  generateWater() {
+    const { width, depth } = this.BLOCK_CHUNK_CONFIG;
+    const waterGeo = new THREE.PlaneGeometry(width, depth);
+
+    const waterMaterial = new THREE.MeshStandardMaterial({
+      color: 0x196475,
+      transparent: true,
+      opacity: 0.45,
+      roughness: 0.6,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+    });
+
+    const waterMesh = new THREE.Mesh(waterGeo, waterMaterial);
+    waterMesh.rotation.x = -Math.PI / 2;
+    waterMesh.position.set(
+      width / 2,
+      this.WORLD_PARAMS.terrain.waterOffset - 0.4,
+      depth / 2
+    );
+    waterMesh.layers.set(1);
+
+    this.add(waterMesh);
+  }
+
   generateMeshInstances() {
     this.clear();
+    this.generateWater();
+
     const { width, height, depth } = this.BLOCK_CHUNK_CONFIG;
 
     // ---- PASS 1: Count ----

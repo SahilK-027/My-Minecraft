@@ -71,6 +71,7 @@ export default class Player {
     });
 
     this.playerPosition.set(13.5, 20.25, 0);
+    this.rayCaster.layers.set(0);
     this.scene.add(this.FPPCamera);
 
     this.createSelectionHelper();
