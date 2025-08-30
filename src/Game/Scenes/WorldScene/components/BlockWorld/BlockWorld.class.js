@@ -10,13 +10,12 @@ export default class BlockWorld extends THREE.Group {
   WORLD_PARAMS = {
     seed: 0,
     terrain: {
-      scale: 70,
-      magnitude: 0.227,
-      offset: 0.7,
+      scale: 64,
+      magnitude: 0.2,
+      offset: 0.45,
     },
     minMiningDepth: 0,
     maxBuildHeight: 32,
-
     trees: {
       frequency: 0.004,
       trunkHeight: {
@@ -32,11 +31,15 @@ export default class BlockWorld extends THREE.Group {
       },
       minDistance: 10,
     },
+    clouds: {
+      density: 0.27,
+      scale: 30,
+    },
   };
 
   BLOCK_CHUNK_CONFIG = {
     width: 32,
-    height: 28,
+    height: 32,
     depth: 32,
   };
 
@@ -723,6 +726,34 @@ export default class BlockWorld extends THREE.Group {
         max: 1,
         step: 0.01,
         label: 'Tree canopy density',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+    this.debug.add(
+      this.WORLD_PARAMS.clouds,
+      'density',
+      {
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: 'Clouds density',
+        onChange: () => {
+          this.generateBlockWorld();
+        },
+      },
+      'BlockWorldChunk Folder'
+    );
+    this.debug.add(
+      this.WORLD_PARAMS.clouds,
+      'scale',
+      {
+        min: 0,
+        max: 100,
+        step: 1,
+        label: 'Clouds scale',
         onChange: () => {
           this.generateBlockWorld();
         },

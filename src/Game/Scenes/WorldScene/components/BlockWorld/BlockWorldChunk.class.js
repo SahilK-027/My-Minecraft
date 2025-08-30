@@ -53,6 +53,7 @@ export default class BlockWorldChunk extends THREE.Group {
     this.generateResources(randomNumberGenerator);
     this.generateTerrain(randomNumberGenerator);
     this.generateTrees(randomNumberGenerator);
+    this.generateClouds(randomNumberGenerator);
     this.loadPlayerChanges();
     this.generateMeshInstances();
 
@@ -148,8 +149,9 @@ export default class BlockWorldChunk extends THREE.Group {
     }
   }
 
-  generateTrees(rng) {
-    const simplex = new SimplexNoise(rng);
+  generateTrees(randomNumberGenerator) {
+    const simplex = new SimplexNoise(randomNumberGenerator);
+    const randN = randomNumberGenerator.random();
 
     const canopySize = this.WORLD_PARAMS.trees.canopy.size.max;
     const { width, depth, height } = this.BLOCK_CHUNK_CONFIG;
@@ -198,7 +200,7 @@ export default class BlockWorldChunk extends THREE.Group {
 
           const minH = trunkCfg.trunkHeight.min;
           const maxH = trunkCfg.trunkHeight.max;
-          const trunkHeight = Math.round(rng.random() * (maxH - minH)) + minH;
+          const trunkHeight = Math.round(randN * (maxH - minH)) + minH;
           const topY = baseY + trunkHeight;
 
           for (let trunkY = baseY; trunkY <= topY; trunkY++) {
@@ -207,7 +209,7 @@ export default class BlockWorldChunk extends THREE.Group {
 
           const minR = canopyCfg.size.min;
           const maxR = canopyCfg.size.max;
-          const R = Math.round(rng.random() * (maxR - minR)) + minR;
+          const R = Math.round(randN * (maxR - minR)) + minR;
 
           for (let dx = -R; dx <= R; dx++) {
             for (let dy = -R; dy <= R; dy++) {
@@ -220,7 +222,7 @@ export default class BlockWorldChunk extends THREE.Group {
 
                 if (this.getBlock(wx, wy, wz)?.id !== blocks.empty.id) continue;
 
-                if (rng.random() > canopyCfg.density) {
+                if (randN > canopyCfg.density) {
                   this.setBlockId(wx, wy, wz, blocks.leaves.id);
                 }
               }
@@ -228,6 +230,30 @@ export default class BlockWorldChunk extends THREE.Group {
           }
 
           break;
+        }
+      }
+    }
+  }
+
+  generateClouds(randomNumberGenerator) {
+    const simplex = new SimplexNoise(randomNumberGenerator);
+    for (let x = 0; x < this.BLOCK_CHUNK_CONFIG.width; x++) {
+      for (let z = 0; z < this.BLOCK_CHUNK_CONFIG.depth; z++) {
+        const value =
+          simplex.noise(
+            (this.position.x + x) / this.WORLD_PARAMS.clouds.scale,
+            (this.position.z + z) / this.WORLD_PARAMS.clouds.scale
+          ) *
+            0.5 +
+          0.5;
+
+        if (value < this.WORLD_PARAMS.clouds.density) {
+          this.setBlockId(
+            x,
+            this.BLOCK_CHUNK_CONFIG.height - 1,
+            z,
+            blocks.cloud.id
+          );
         }
       }
     }
