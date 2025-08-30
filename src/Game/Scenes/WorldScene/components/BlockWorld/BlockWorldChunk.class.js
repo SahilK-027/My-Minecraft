@@ -370,7 +370,7 @@ export default class BlockWorldChunk extends THREE.Group {
     waterMesh.rotation.x = -Math.PI / 2;
     waterMesh.position.set(
       width / 2,
-      this.WORLD_PARAMS.terrain.waterOffset - 0.55,
+      this.WORLD_PARAMS.terrain.waterOffset - 0.4,
       depth / 2
     );
     waterMesh.layers.set(1);
