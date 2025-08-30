@@ -9,7 +9,11 @@
 - [x] Physics system — Basic collision and movement physics
 - [x] Infinite world — Chunk streaming and unloading
 - [x] Terraforming — Modify terrain in real-time
-- [ ] Trees — Procedural tree generation
+- [x] Trees — Procedural cloud generation
+- [x] Clouds — Procedural cloud generation
+- [ ] Water — Simple water generation
+- [ ] Flowering Trees - Implement leaf variety in trees
+- [ ] Realistic Water - Shader based water rendering
 - [ ] Bushes — Small vegetation details
 - [ ] TPP camera - Third-person perspective camera controls
 - [ ] Full screen toggle - Upon game start go to full screen

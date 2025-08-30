@@ -23,7 +23,7 @@ export default class Camera {
   setOrbitCamera(fov, near, far) {
     const aspectRatio = this.sizes.width / this.sizes.height;
     this.orbitCamera = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
-    this.orbitCamera.position.set(-64, 32, -64);
+    this.orbitCamera.position.set(-15, 23.25, 2);
     this.scene.add(this.orbitCamera);
   }
 
