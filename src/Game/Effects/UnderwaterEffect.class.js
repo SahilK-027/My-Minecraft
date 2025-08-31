@@ -12,8 +12,8 @@ export class UnderwaterEffect {
     // Underwater settings
     this.underwaterTint = new THREE.Color(0x548ebb);
     this.underwaterFogColor = new THREE.Color(0x548ebb);
-    this.underwaterFogNear = 5;
-    this.underwaterFogFar = 20;
+    this.underwaterFogNear = 1;
+    this.underwaterFogFar = 30;
 
     // Store original settings
     this.originalFogColor = null;
