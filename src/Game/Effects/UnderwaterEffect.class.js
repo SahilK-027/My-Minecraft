@@ -10,8 +10,8 @@ export class UnderwaterEffect {
     this.textureResources = game.resources.items;
 
     // Underwater settings
-    this.underwaterTint = new THREE.Color(0x548ebb);
-    this.underwaterFogColor = new THREE.Color(0x548ebb);
+    this.underwaterTint = new THREE.Color(0x3969ae);
+    this.underwaterFogColor = new THREE.Color(0x3969ae);
     this.underwaterFogNear = 1;
     this.underwaterFogFar = 30;
 
@@ -23,7 +23,7 @@ export class UnderwaterEffect {
 
     // Transition
     this.currentTintStrength = 0;
-    this.transitionSpeed = 0.065;
+    this.transitionSpeed = 0.3;
 
     // Bubble system - now using 2D planes
     this.bubbles = [];
@@ -35,16 +35,14 @@ export class UnderwaterEffect {
       opacity: 0.8,
       alphaTest: 0.1,
       side: THREE.DoubleSide,
-      depthWrite: false, // Prevents z-fighting between bubbles
+      depthWrite: false,
     });
     this.bubbleSpawnTimer = 0;
-    this.bubbleSpawnRate = 0.5;
+    this.bubbleSpawnRate = 0.4;
 
     // Debug
     this.isDebugMode = this.game.isDebugMode;
     this.debug = DebugGUI.getInstance();
-
-    // Debug-friendly parameter holders (strings for color pickers)
     this._debugColors = {
       tint: `#${this.underwaterTint.getHexString()}`,
       fog: `#${this.underwaterFogColor.getHexString()}`,

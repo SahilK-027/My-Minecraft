@@ -358,24 +358,24 @@ export default class BlockWorldChunk extends THREE.Group {
     const waterGeo = new THREE.PlaneGeometry(width, depth);
 
     const waterMaterial = new THREE.MeshStandardMaterial({
-      color: 0x196475,
+      color: 0x0c4683,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.7,
       roughness: 0.6,
       metalness: 0.05,
       side: THREE.DoubleSide,
     });
 
-    const waterMesh = new THREE.Mesh(waterGeo, waterMaterial);
-    waterMesh.rotation.x = -Math.PI / 2;
-    waterMesh.position.set(
+    this.waterMesh = new THREE.Mesh(waterGeo, waterMaterial);
+    this.waterMesh.rotation.x = -Math.PI / 2;
+    this.waterMesh.position.set(
       width / 2,
       this.WORLD_PARAMS.terrain.waterOffset - 0.4,
       depth / 2
     );
-    waterMesh.layers.set(1);
+    this.waterMesh.layers.set(1);
 
-    this.add(waterMesh);
+    this.add(this.waterMesh);
   }
 
   generateMeshInstances() {
@@ -669,4 +669,6 @@ export default class BlockWorldChunk extends THREE.Group {
       return true;
     }
   }
+
+  update(delta) {}
 }

@@ -22,7 +22,7 @@ export default class World {
 
   update(delta) {
     this.player.update(this.blockWorld, delta);
-    this.blockWorld.update(this.player);
+    this.blockWorld.update(this.player, delta);
     this.lighting.update();
   }
 }
