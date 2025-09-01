@@ -28,7 +28,7 @@ export default class BlockWorld extends THREE.Group {
           min: 2,
           max: 4,
         },
-        density: 0.4,
+        density: 0.3,
       },
       minDistance: 10,
     },
@@ -48,7 +48,7 @@ export default class BlockWorld extends THREE.Group {
 
   GRASS_SEASONS_CONFIG = {
     summer: {
-      variationThreshold: 0.8,
+      variationThreshold: 0.9,
       variationHeight:
         this.BLOCK_CHUNK_CONFIG.height * this.WORLD_PARAMS.terrain.offset,
       variationTexture: 'grassVariation',
@@ -66,6 +66,21 @@ export default class BlockWorld extends THREE.Group {
     },
   };
 
+  LEAVES_SEASONS_CONFIG = {
+    summer: {
+      variationThreshold: 0.6,
+      variationTexture: 'leavesVariation',
+    },
+    autumn: {
+      variationThreshold: 0.8,
+      variationTexture: 'leavesVariation',
+    },
+    winter: {
+      variationThreshold: 0.0,
+      variationTexture: 'leavesVariation',
+    },
+  };
+
   ASYNC_LOADING = true;
 
   dataStore = new DataStore();
@@ -76,6 +91,7 @@ export default class BlockWorld extends THREE.Group {
     this.seed = seed;
     this.currentSeason = 'summer';
     this.seasonGrass = this.GRASS_SEASONS_CONFIG[this.currentSeason];
+    this.seasonLeaves = this.LEAVES_SEASONS_CONFIG[this.currentSeason];
     this.textureResources = this.game.resources.items;
     this.isDebugMode = this.game.isDebugMode;
     this.debug = DebugGUI.getInstance();
@@ -202,6 +218,16 @@ export default class BlockWorld extends THREE.Group {
           left: 'leaves',
         },
       },
+      [blocks.leavesVariation.id]: {
+        faces: {
+          front: `${this.seasonLeaves.variationTexture}`,
+          back: `${this.seasonLeaves.variationTexture}`,
+          top: `leaves`,
+          bottom: 'leaves',
+          right: `${this.seasonLeaves.variationTexture}`,
+          left: `${this.seasonLeaves.variationTexture}`,
+        },
+      },
       [blocks.cloud.id]: {
         faces: {
           front: 'cloud',
@@ -245,6 +271,10 @@ export default class BlockWorld extends THREE.Group {
     this.atlas.addTexture('treeTop', this.textureResources.treeTopTexture);
     this.atlas.addTexture('sand', this.textureResources.sandTexture);
     this.atlas.addTexture('leaves', this.textureResources.leavesTexture);
+    this.atlas.addTexture(
+      this.seasonLeaves.variationTexture,
+      this.textureResources[`${this.seasonLeaves.variationTexture}Texture`]
+    );
     this.atlas.addTexture('cloud', this.textureResources.cloudTexture);
 
     this.atlasTexture = this.atlas.generateAtlasTexture();
@@ -281,6 +311,7 @@ export default class BlockWorld extends THREE.Group {
           this.atlasTexture,
           this.blockConfigs,
           this.seasonGrass,
+          this.seasonLeaves,
           this.dataStore
         );
         chunk.position.set(
@@ -370,6 +401,7 @@ export default class BlockWorld extends THREE.Group {
       this.atlasTexture,
       this.blockConfigs,
       this.seasonGrass,
+      this.seasonLeaves,
       this.dataStore
     );
     chunk.position.set(
@@ -552,6 +584,7 @@ export default class BlockWorld extends THREE.Group {
     try {
       this.currentSeason = newSeason;
       this.seasonGrass = this.GRASS_SEASONS_CONFIG[this.currentSeason];
+      this.seasonLeaves = this.LEAVES_SEASONS_CONFIG[this.currentSeason];
 
       this.initTextureAtlas();
       this.generateBlockWorld();

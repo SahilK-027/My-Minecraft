@@ -31,12 +31,16 @@ export const blocks = {
     id: 6,
     name: 'leaves',
   },
-  cloud: {
+  leavesVariation: {
     id: 7,
+    name: 'leavesVariation',
+  },
+  cloud: {
+    id: 8,
     name: 'cloud',
   },
   stone: {
-    id: 8,
+    id: 9,
     name: 'stone',
     scale: {
       x: 52,
@@ -46,19 +50,19 @@ export const blocks = {
     scarcity: 0.59,
   },
   coalOre: {
-    id: 9,
+    id: 10,
     name: 'coalOre',
     scale: { x: 45, y: 30, z: 42 },
     scarcity: 0.6,
   },
   ironOre: {
-    id: 10,
+    id: 11,
     name: 'ironOre',
     scale: { x: 18.9, y: 54.2, z: 41 },
     scarcity: 0.85,
   },
   goldOre: {
-    id: 11,
+    id: 12,
     name: 'goldOre',
     scale: { x: 50, y: 55, z: 52 },
     scarcity: 0.92,

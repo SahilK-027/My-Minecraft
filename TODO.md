@@ -1,5 +1,7 @@
 # 📝 TODO
 
+## Phase 1
+
 - [x] Initial Voxel — Base voxel structure and rendering
 - [x] Procedural world — Noise-based terrain generation
 - [x] Block types — Define and register block variations
@@ -13,7 +15,10 @@
 - [x] Clouds — Procedural cloud generation
 - [x] Water — Simple water generation
 - [x] Under water — Under water effects
-- [ ] Flowering Trees - Implement leaf variety in trees
+- [x] Flowering Trees - Implement leaf variety in trees
+
+## Phase 2
+
 - [ ] Realistic Water - Shader based water rendering
 - [ ] Bushes — Small vegetation details
 - [ ] TPP camera - Third-person perspective camera controls

@@ -86,7 +86,12 @@ const ASSETS = [
   },
   {
     id: 'leavesTexture',
-    path: ['/assets/textures/blocks/leaves/azalea_leaves_2.png'],
+    path: ['/assets/textures/blocks/leaves/leaves.png'],
+    type: 'texture',
+  },
+  {
+    id: 'leavesVariationTexture',
+    path: ['/assets/textures/blocks/leaves/leaves_variation.png'],
     type: 'texture',
   },
   {

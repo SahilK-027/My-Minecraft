@@ -13,6 +13,7 @@ export default class BlockWorldChunk extends THREE.Group {
     atlasTexture,
     blockConfigs,
     seasonGrass,
+    seasonLeaves,
     dataStore
   ) {
     super();
@@ -28,6 +29,7 @@ export default class BlockWorldChunk extends THREE.Group {
     this.game = Game.getInstance();
 
     this.seasonGrass = seasonGrass;
+    this.seasonLeaves = seasonLeaves;
 
     this.initResources();
   }
@@ -190,7 +192,7 @@ export default class BlockWorldChunk extends THREE.Group {
               // Regular surface - use grass
               const useVariation =
                 Math.random() > this.seasonGrass.variationThreshold &&
-                y > this.seasonGrass.variationHeight;
+                y <= this.seasonGrass.variationHeight;
               this.setBlockId(
                 x,
                 y,
@@ -286,7 +288,15 @@ export default class BlockWorldChunk extends THREE.Group {
                 if (this.getBlock(wx, wy, wz)?.id !== blocks.empty.id) continue;
 
                 if (randN * Math.random() > canopyCfg.density) {
-                  this.setBlockId(wx, wy, wz, blocks.leaves.id);
+                  const useVariation =
+                    Math.random() > this.seasonLeaves.variationThreshold;
+
+                  this.setBlockId(
+                    wx,
+                    wy,
+                    wz,
+                    useVariation ? blocks.leavesVariation.id : blocks.leaves.id
+                  );
                 }
               }
             }
