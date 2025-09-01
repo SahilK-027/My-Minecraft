@@ -10,8 +10,8 @@ export class UnderwaterEffect {
     this.textureResources = game.resources.items;
 
     // Underwater settings
-    this.underwaterTint = new THREE.Color(0x3969ae);
-    this.underwaterFogColor = new THREE.Color(0x3969ae);
+    this.underwaterTint = new THREE.Color(0x548ebb);
+    this.underwaterFogColor = new THREE.Color(0x196475);
     this.underwaterFogNear = 1;
     this.underwaterFogFar = 30;
 

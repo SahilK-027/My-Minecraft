@@ -358,7 +358,7 @@ export default class BlockWorldChunk extends THREE.Group {
     const waterGeo = new THREE.PlaneGeometry(width, depth);
 
     const waterMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0c4683,
+      color: 0x196475,
       transparent: true,
       opacity: 0.7,
       roughness: 0.6,
