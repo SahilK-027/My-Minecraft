@@ -4,6 +4,8 @@ import { SimplexNoise } from 'three/examples/jsm/Addons.js';
 import { RandomNumberGenerator } from '../../../../Utils/RandomNumberGenerator.class';
 import { blocks, resources } from '../../../../Data/Blocks';
 import { BlockGeometry } from './BlockGeometry.class';
+import waterVertexShader from './shaders/water/vertex.glsl';
+import waterFragmentShader from './shaders/water/fragment.glsl';
 
 export default class BlockWorldChunk extends THREE.Group {
   constructor(
@@ -27,6 +29,7 @@ export default class BlockWorldChunk extends THREE.Group {
     this.dataStore = dataStore;
 
     this.game = Game.getInstance();
+    this.textureResources = this.game.resources.items;
 
     this.seasonGrass = seasonGrass;
     this.seasonLeaves = seasonLeaves;
@@ -367,16 +370,27 @@ export default class BlockWorldChunk extends THREE.Group {
     const { width, depth } = this.BLOCK_CHUNK_CONFIG;
     const waterGeo = new THREE.PlaneGeometry(width, depth);
 
-    const waterMaterial = new THREE.MeshStandardMaterial({
-      color: 0x196475,
-      transparent: true,
-      opacity: 0.7,
-      roughness: 0.6,
-      metalness: 0.05,
+    const fogUniforms = THREE.UniformsUtils.merge([THREE.UniformsLib['fog']]);
+    this.waterMaterial = new THREE.ShaderMaterial({
+      vertexShader: waterVertexShader,
+      fragmentShader: waterFragmentShader,
       side: THREE.DoubleSide,
+      fog: true,
+      transparent: true,
+      uniforms: {
+        ...fogUniforms,
+        uTime: { value: 0 },
+        uFrequency: { value: 1.0 },
+        uAmplitude: { value: 0.125 },
+        uScrollSpeed: { value: 0.01 },
+        uNoiseScale: { value: 5.0 },
+        uNoiseSpeed: { value: 0.5 },
+        uOpacity: { value: 0.65 },
+        uDiffuse: { value: this.textureResources.waterDiffuseTexture },
+      },
     });
 
-    this.waterMesh = new THREE.Mesh(waterGeo, waterMaterial);
+    this.waterMesh = new THREE.Mesh(waterGeo, this.waterMaterial);
     this.waterMesh.rotation.x = -Math.PI / 2;
     this.waterMesh.position.set(
       width / 2,
@@ -680,5 +694,7 @@ export default class BlockWorldChunk extends THREE.Group {
     }
   }
 
-  update(delta) {}
+  update(elapsedTime) {
+    this.waterMaterial.uniforms.uTime.value = elapsedTime;
+  }
 }

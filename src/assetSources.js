@@ -121,7 +121,12 @@ const ASSETS = [
   },
   {
     id: 'bubbleTexture',
-    path: ['/assets/textures/bubble.png'],
+    path: ['/assets/textures/water/bubble.png'],
+    type: 'texture',
+  },
+  {
+    id: 'waterDiffuseTexture',
+    path: ['/assets/textures/water/diffuse.png'],
     type: 'texture',
   },
 ];

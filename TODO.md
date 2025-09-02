@@ -16,12 +16,11 @@
 - [x] Water — Simple water generation
 - [x] Under water — Under water effects
 - [x] Flowering Trees - Implement leaf variety in trees
+- [x] Stylized Water - Shader based water rendering
 
 ## Phase 2
 
-- [ ] Realistic Water - Shader based water rendering
 - [ ] Bushes — Small vegetation details
-- [ ] TPP camera - Third-person perspective camera controls
 - [ ] Full screen toggle - Upon game start go to full screen
-- [ ] Seasons and Weather — Dynamic environmental changes
 - [ ] Basic interface for HUD, menus, and debug info
+- [ ] Seasons and Weather — Dynamic environmental changes

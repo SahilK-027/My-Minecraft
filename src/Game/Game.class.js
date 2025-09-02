@@ -90,7 +90,7 @@ export default class Game {
       this.handleMouseDown(event);
     });
     this.time.on('animate', () => {
-      this.update(this.time.delta);
+      this.update(this.time.delta, this.time.elapsedTime);
     });
     this.time.startLoop();
   }
@@ -156,7 +156,7 @@ export default class Game {
     }
   }
 
-  update(delta) {
+  update(delta, elapsedTime) {
     if (this.isPaused && !this.needsRenderAfterResize) return;
 
     if (!this.cameraInstance || !this.world || !this.renderer) return;
@@ -170,7 +170,7 @@ export default class Game {
     // Only update game logic if not paused
     if (!this.isPaused) {
       this.cameraInstance.update();
-      this.world.update(delta);
+      this.world.update(delta, elapsedTime);
       this.physics.update(delta, this.player, this.world.blockWorld);
 
       if (

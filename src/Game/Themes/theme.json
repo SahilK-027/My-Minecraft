@@ -24,8 +24,8 @@
         "windsweptHills": {
             "skyColor": "#7ec4fb",
             "fogColor": "#7ec4fb",
-            "fogStart": 8,
-            "fogEnd": 75,
+            "fogStart": 1,
+            "fogEnd": 60,
             "horizonAccent": "#D0E8FF"
         }
     }

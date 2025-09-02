@@ -11,8 +11,8 @@ export default class BlockWorld extends THREE.Group {
     seed: 0,
     terrain: {
       scale: 64,
-      magnitude: 0.2,
       offset: 0.45,
+      magnitude: 0.2125,
       waterOffset: 10,
     },
     minMiningDepth: 0,
@@ -92,7 +92,7 @@ export default class BlockWorld extends THREE.Group {
     super();
     this.game = Game.getInstance();
     this.seed = seed;
-    this.currentSeason = 'autumn';
+    this.currentSeason = 'summer';
     this.seasonGrass = this.GRASS_SEASONS_CONFIG[this.currentSeason];
     this.seasonLeaves = this.LEAVES_SEASONS_CONFIG[this.currentSeason];
     this.textureResources = this.game.resources.items;
@@ -335,16 +335,26 @@ export default class BlockWorld extends THREE.Group {
     console.log('All initial chunks instantiated');
   }
 
-  update(player) {
-    // Find the visible chunks based on players position
+  update(player, delta, elapsedTime) {
+    // Find the visible chunks based on player's position
     const visibleChunks = this.getVisibleChunks(player);
+
     // Compare with the current set of chunks
     const chunksToAdd = this.getChunksToAdd(visibleChunks);
+
     // Remove chunks that are no longer visible
     this.removeUnusedChunksFromWorld(visibleChunks);
+
     // Add newly visible chunks
     for (const chunk of chunksToAdd) {
       this.generateChunk(chunk.x, chunk.z);
+    }
+
+    for (const coords of visibleChunks) {
+      const chunkObj = this.getChunk(coords.x, coords.z);
+      if (chunkObj && chunkObj.loaded) {
+        chunkObj.update(elapsedTime);
+      }
     }
   }
 
