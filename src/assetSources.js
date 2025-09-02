@@ -95,6 +95,26 @@ const ASSETS = [
     type: 'texture',
   },
   {
+    id: 'autumnLeavesTexture',
+    path: ['/assets/textures/blocks/leaves/autumn_leaves.png'],
+    type: 'texture',
+  },
+  {
+    id: 'autumnLeavesVariationTexture',
+    path: ['/assets/textures/blocks/leaves/autumn_leaves_variation.png'],
+    type: 'texture',
+  },
+  {
+    id: 'winterLeavesTexture',
+    path: ['/assets/textures/blocks/leaves/winter_leaves.png'],
+    type: 'texture',
+  },
+  {
+    id: 'winterLeavesVariationTexture',
+    path: ['/assets/textures/blocks/leaves/winter_leaves.png'],
+    type: 'texture',
+  },
+  {
     id: 'cloudTexture',
     path: ['/assets/textures/blocks/cloud/cloud.png'],
     type: 'texture',

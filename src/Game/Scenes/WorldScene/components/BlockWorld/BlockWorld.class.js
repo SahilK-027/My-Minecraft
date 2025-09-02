@@ -26,9 +26,9 @@ export default class BlockWorld extends THREE.Group {
       canopy: {
         size: {
           min: 2,
-          max: 4,
+          max: 5,
         },
-        density: 0.3,
+        density: 0.2,
       },
       minDistance: 10,
     },
@@ -70,14 +70,17 @@ export default class BlockWorld extends THREE.Group {
     summer: {
       variationThreshold: 0.6,
       variationTexture: 'leavesVariation',
+      leavesTexture: 'leaves',
     },
     autumn: {
       variationThreshold: 0.8,
-      variationTexture: 'leavesVariation',
+      variationTexture: 'autumnLeavesVariation',
+      leavesTexture: 'autumnLeaves',
     },
     winter: {
-      variationThreshold: 0.0,
-      variationTexture: 'leavesVariation',
+      variationThreshold: 0.8,
+      variationTexture: 'winterLeavesVariation',
+      leavesTexture: 'winterLeaves',
     },
   };
 
@@ -89,7 +92,7 @@ export default class BlockWorld extends THREE.Group {
     super();
     this.game = Game.getInstance();
     this.seed = seed;
-    this.currentSeason = 'summer';
+    this.currentSeason = 'autumn';
     this.seasonGrass = this.GRASS_SEASONS_CONFIG[this.currentSeason];
     this.seasonLeaves = this.LEAVES_SEASONS_CONFIG[this.currentSeason];
     this.textureResources = this.game.resources.items;
@@ -210,20 +213,20 @@ export default class BlockWorld extends THREE.Group {
       },
       [blocks.leaves.id]: {
         faces: {
-          front: 'leaves',
-          back: 'leaves',
-          top: 'leaves',
-          bottom: 'leaves',
-          right: 'leaves',
-          left: 'leaves',
+          front: `${this.seasonLeaves.leavesTexture}`,
+          back: `${this.seasonLeaves.leavesTexture}`,
+          top: `${this.seasonLeaves.leavesTexture}`,
+          bottom: `${this.seasonLeaves.leavesTexture}`,
+          right: `${this.seasonLeaves.leavesTexture}`,
+          left: `${this.seasonLeaves.leavesTexture}`,
         },
       },
       [blocks.leavesVariation.id]: {
         faces: {
           front: `${this.seasonLeaves.variationTexture}`,
           back: `${this.seasonLeaves.variationTexture}`,
-          top: `leaves`,
-          bottom: 'leaves',
+          top: `${this.seasonLeaves.variationTexture}`,
+          bottom: `${this.seasonLeaves.variationTexture}`,
           right: `${this.seasonLeaves.variationTexture}`,
           left: `${this.seasonLeaves.variationTexture}`,
         },
@@ -240,19 +243,23 @@ export default class BlockWorld extends THREE.Group {
       },
     };
 
-    let grassTextureTopToRender, grassTextureSideToRender;
+    let grassTextureTopToRender, grassTextureSideToRender, leavesTexture;
     switch (this.currentSeason) {
       case 'summer':
         grassTextureTopToRender = this.textureResources.grassTexture;
         grassTextureSideToRender = this.textureResources.grassSideTexture;
+        leavesTexture = this.textureResources.leavesTexture;
         break;
       case 'winter':
         grassTextureTopToRender = this.textureResources.winterGrassTexture;
         grassTextureSideToRender = this.textureResources.winterGrassSideTexture;
+        leavesTexture = this.textureResources.winterLeavesTexture;
         break;
       case 'autumn':
         grassTextureTopToRender = this.textureResources.autumnGrassTexture;
         grassTextureSideToRender = this.textureResources.autumnGrassSideTexture;
+        leavesTexture = this.textureResources.autumnLeavesTexture;
+        break;
     }
 
     this.atlas.addTexture('bedrock', this.textureResources.bedrockTexture);
@@ -270,7 +277,7 @@ export default class BlockWorld extends THREE.Group {
     this.atlas.addTexture('treeSide', this.textureResources.treeSideTexture);
     this.atlas.addTexture('treeTop', this.textureResources.treeTopTexture);
     this.atlas.addTexture('sand', this.textureResources.sandTexture);
-    this.atlas.addTexture('leaves', this.textureResources.leavesTexture);
+    this.atlas.addTexture(this.seasonLeaves.leavesTexture, leavesTexture);
     this.atlas.addTexture(
       this.seasonLeaves.variationTexture,
       this.textureResources[`${this.seasonLeaves.variationTexture}Texture`]
