@@ -363,9 +363,9 @@ export class UnderwaterEffect {
         const distance = 1 + Math.random() * 4;
 
         bubble.position.set(
-          playerPosition.x + Math.cos(angle) * distance,
+          playerPosition.x + Math.cos(angle) * distance * 1.5,
           Math.floor(playerPosition.y) - 2 - Math.random(),
-          playerPosition.z + Math.sin(angle) * distance
+          playerPosition.z + Math.sin(angle) * distance * 1.5
         );
 
         // Make bubbles always face the camera (billboard effect)

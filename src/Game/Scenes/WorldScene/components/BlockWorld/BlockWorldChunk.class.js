@@ -61,6 +61,7 @@ export default class BlockWorldChunk extends THREE.Group {
     this.generateClouds(randomNumberGenerator);
     this.loadPlayerChanges();
     this.generateMeshInstances();
+    this.generateBushes(randomNumberGenerator);
 
     this.loaded = true;
   }
@@ -309,6 +310,135 @@ export default class BlockWorldChunk extends THREE.Group {
         }
       }
     }
+  }
+
+  generateBushes(randomNumberGenerator) {
+    const simplex = new SimplexNoise(randomNumberGenerator);
+    const BUSH_DENSITY = this.WORLD_PARAMS.bushes?.density;
+    const { width, depth, height } = this.BLOCK_CHUNK_CONFIG;
+
+    // First pass: find all valid bush positions
+    const bushPositions = [];
+    const noiseScale = this.WORLD_PARAMS.bushes?.noiseScale;
+
+    for (let x = 0; x < width; x++) {
+      for (let z = 0; z < depth; z++) {
+        const value =
+          simplex.noise(
+            (this.position.x + x) / noiseScale,
+            (this.position.z + z) / noiseScale
+          ) *
+            0.5 +
+          0.5;
+
+        if (value <= 1 - BUSH_DENSITY) continue;
+
+        // Find topmost grass block
+        for (let y = height - 1; y >= 0; y--) {
+          const block = this.getBlock(x, y, z);
+          if (!block) continue;
+
+          if (
+            block.id === blocks.grass.id ||
+            block.id === blocks.grassVariation.id
+          ) {
+            const above = this.getBlock(x, y + 1, z);
+            if (above && above.id !== blocks.empty.id) break;
+
+            bushPositions.push({ x: x + 0.5, y: y + 0.725, z: z + 0.5 });
+            break;
+          }
+
+          if (
+            block.id !== blocks.empty.id &&
+            block.id !== blocks.grass.id &&
+            block.id !== blocks.grassVariation.id
+          ) {
+            break;
+          }
+        }
+      }
+    }
+
+    if (bushPositions.length === 0) return;
+
+    const bushTex = this.textureResources.bushTexture;
+
+    bushTex.wrapS = THREE.RepeatWrapping;
+    bushTex.wrapT = THREE.RepeatWrapping;
+    bushTex.repeat.set(1, 1);
+
+    bushTex.minFilter = THREE.NearestFilter;
+    bushTex.magFilter = THREE.NearestFilter;
+
+    bushTex.colorSpace = THREE.SRGBColorSpace;
+
+    bushTex.generateMipmaps = false;
+
+    const planeGeo = new THREE.PlaneGeometry(0.75, 0.75);
+    const bushMaterial = new THREE.MeshToonMaterial({
+      side: THREE.DoubleSide,
+      transparent: true,
+      alphaTest: 0.1,
+      map: bushTex,
+    });
+
+    // Create two instanced meshes for cross pattern
+    this.bushMesh1 = new THREE.InstancedMesh(
+      planeGeo,
+      bushMaterial,
+      bushPositions.length
+    );
+    this.bushMesh2 = new THREE.InstancedMesh(
+      planeGeo,
+      bushMaterial,
+      bushPositions.length
+    );
+
+    this.bushMesh1.layers.set(1);
+    this.bushMesh2.layers.set(1);
+    this.bushMesh1.name = 'bushPlane1';
+    this.bushMesh2.name = 'bushPlane2';
+
+    // Position instances
+    const matrix1 = new THREE.Matrix4();
+    const matrix2 = new THREE.Matrix4();
+
+    for (let i = 0; i < bushPositions.length; i++) {
+      const pos = bushPositions[i];
+
+      // Random rotation and scale
+      const rotation = Math.random() * Math.PI * 2;
+      const scale = 0.7 + Math.random() * 0.6;
+
+      // First plane
+      matrix1.compose(
+        new THREE.Vector3(pos.x, pos.y, pos.z),
+        new THREE.Quaternion().setFromAxisAngle(
+          new THREE.Vector3(0, 1, 0),
+          rotation
+        ),
+        new THREE.Vector3(scale, scale, scale)
+      );
+      this.bushMesh1.setMatrixAt(i, matrix1);
+
+      // Second plane (90 degrees rotated)
+      matrix2.compose(
+        new THREE.Vector3(pos.x, pos.y, pos.z),
+        new THREE.Quaternion().setFromAxisAngle(
+          new THREE.Vector3(0, 1, 0),
+          rotation + Math.PI / 2
+        ),
+        new THREE.Vector3(scale, scale, scale)
+      );
+      this.bushMesh2.setMatrixAt(i, matrix2);
+    }
+
+    this.bushMesh1.instanceMatrix.needsUpdate = true;
+    this.bushMesh2.instanceMatrix.needsUpdate = true;
+
+    this.add(this.bushMesh1);
+    this.add(this.bushMesh2);
   }
 
   generateClouds(randomNumberGenerator) {

@@ -129,6 +129,11 @@ const ASSETS = [
     path: ['/assets/textures/water/diffuse.png'],
     type: 'texture',
   },
+  {
+    id: 'bushTexture',
+    path: ['/assets/textures/bush/bush.png'],
+    type: 'texture',
+  },
 ];
 
 export default ASSETS;

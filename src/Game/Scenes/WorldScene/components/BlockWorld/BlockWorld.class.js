@@ -36,6 +36,10 @@ export default class BlockWorld extends THREE.Group {
       density: 0.27,
       scale: 30,
     },
+    bushes: {
+      density: 0.09,
+      noiseScale: 4,
+    },
   };
 
   BLOCK_CHUNK_CONFIG = {
