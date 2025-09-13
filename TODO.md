@@ -17,10 +17,10 @@
 - [x] Under water — Under water effects
 - [x] Flowering Trees - Implement leaf variety in trees
 - [x] Stylized Water - Shader based water rendering
+- [x] Bushes — Small vegetation details
 
 ## Phase 2
 
-- [ ] Bushes — Small vegetation details
 - [ ] Full screen toggle - Upon game start go to full screen
 - [ ] Basic interface for HUD, menus, and debug info
 - [ ] Seasons and Weather — Dynamic environmental changes
